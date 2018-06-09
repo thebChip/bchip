@@ -42,6 +42,7 @@ namespace BChipDesktop
             this.bchipBtn = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.addBtn = new System.Windows.Forms.Button();
+            this.wipeBchipBtn = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.importKeyTextBox = new System.Windows.Forms.TextBox();
             this.importConfirmKeyButton = new System.Windows.Forms.Button();
@@ -61,7 +62,6 @@ namespace BChipDesktop
             this.setPinBtn = new System.Windows.Forms.Button();
             this.insertCardLabel = new System.Windows.Forms.Label();
             this.notConnectedIcon = new System.Windows.Forms.PictureBox();
-            this.wipeBchipBtn = new System.Windows.Forms.Button();
             this.importKeyBtn = new System.Windows.Forms.Button();
             this.createKeyBtn = new System.Windows.Forms.Button();
             this.exportKeyBtn = new System.Windows.Forms.Button();
@@ -118,7 +118,8 @@ namespace BChipDesktop
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
+            this.pictureBox1.Visible = false;
+            this.pictureBox1.Click += new System.EventHandler(this.PictureBox1_Click);
             // 
             // ReceiveBtn
             // 
@@ -129,6 +130,7 @@ namespace BChipDesktop
             this.ReceiveBtn.TabIndex = 5;
             this.ReceiveBtn.Text = "Receive";
             this.ReceiveBtn.UseVisualStyleBackColor = true;
+            this.ReceiveBtn.Visible = false;
             this.ReceiveBtn.Click += new System.EventHandler(this.ReceiveBtn_Click);
             // 
             // sendBtn
@@ -140,7 +142,8 @@ namespace BChipDesktop
             this.sendBtn.TabIndex = 4;
             this.sendBtn.Text = "Send";
             this.sendBtn.UseVisualStyleBackColor = true;
-            this.sendBtn.Click += new System.EventHandler(this.sendBtn_Click);
+            this.sendBtn.Visible = false;
+            this.sendBtn.Click += new System.EventHandler(this.SendBtn_Click);
             // 
             // bchipBtn
             // 
@@ -151,7 +154,7 @@ namespace BChipDesktop
             this.bchipBtn.TabIndex = 1;
             this.bchipBtn.Text = "Load BChip";
             this.bchipBtn.UseVisualStyleBackColor = true;
-            this.bchipBtn.Click += new System.EventHandler(this.bchipBtn_Click);
+            this.bchipBtn.Click += new System.EventHandler(this.BchipBtn_Click);
             // 
             // panel1
             // 
@@ -178,7 +181,18 @@ namespace BChipDesktop
             this.addBtn.Text = "Add";
             this.addBtn.UseVisualStyleBackColor = true;
             this.addBtn.Visible = false;
-            this.addBtn.Click += new System.EventHandler(this.addBtn_Click);
+            this.addBtn.Click += new System.EventHandler(this.AddBtn_Click);
+            // 
+            // wipeBchipBtn
+            // 
+            this.wipeBchipBtn.Location = new System.Drawing.Point(225, 40);
+            this.wipeBchipBtn.Margin = new System.Windows.Forms.Padding(4);
+            this.wipeBchipBtn.Name = "wipeBchipBtn";
+            this.wipeBchipBtn.Size = new System.Drawing.Size(184, 56);
+            this.wipeBchipBtn.TabIndex = 14;
+            this.wipeBchipBtn.Text = "Erase/Initialize";
+            this.wipeBchipBtn.UseVisualStyleBackColor = true;
+            this.wipeBchipBtn.Click += new System.EventHandler(this.wipeBchipBtn_Click);
             // 
             // panel3
             // 
@@ -363,7 +377,7 @@ namespace BChipDesktop
             this.currencyComboBox.Name = "currencyComboBox";
             this.currencyComboBox.Size = new System.Drawing.Size(170, 40);
             this.currencyComboBox.TabIndex = 11;
-            this.currencyComboBox.SelectedIndexChanged += new System.EventHandler(this.currencyComboBox_SelectionChangeCommitted);
+            this.currencyComboBox.SelectedIndexChanged += new System.EventHandler(this.CurrencyComboBox_SelectionChangeCommitted);
             // 
             // saveToBchipBtn
             // 
@@ -406,17 +420,6 @@ namespace BChipDesktop
             this.notConnectedIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.notConnectedIcon.TabIndex = 6;
             this.notConnectedIcon.TabStop = false;
-            // 
-            // wipeBchipBtn
-            // 
-            this.wipeBchipBtn.Location = new System.Drawing.Point(225, 40);
-            this.wipeBchipBtn.Margin = new System.Windows.Forms.Padding(4);
-            this.wipeBchipBtn.Name = "wipeBchipBtn";
-            this.wipeBchipBtn.Size = new System.Drawing.Size(184, 56);
-            this.wipeBchipBtn.TabIndex = 14;
-            this.wipeBchipBtn.Text = "Erase/Initialize";
-            this.wipeBchipBtn.UseVisualStyleBackColor = true;
-            this.wipeBchipBtn.Click += new System.EventHandler(this.wipeBchipBtn_Click);
             // 
             // importKeyBtn
             // 
@@ -513,7 +516,7 @@ namespace BChipDesktop
             this.cardList.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToDisplayedHeaders;
             this.cardList.Size = new System.Drawing.Size(652, 948);
             this.cardList.TabIndex = 0;
-            this.cardList.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardList_CellClick);
+            this.cardList.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.CardList_CellClick);
             this.cardList.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardList_CellContentClick);
             this.cardList.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.cardList_RowsAdded);
             this.cardList.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.CardList_RowsRemoved);
@@ -623,11 +626,11 @@ namespace BChipDesktop
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.Name = "MainUI";
-            this.ShowIcon = false;
-            this.Text = "bChip Interface";
+            this.Text = "BChip BETA Controller";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainUI_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panel2.ResumeLayout(false);

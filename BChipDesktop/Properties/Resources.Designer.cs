@@ -69,5 +69,35 @@ namespace BChipDesktop.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] NBitcoin {
+            get {
+                object obj = ResourceManager.GetObject("NBitcoin", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Newtonsoft_Json {
+            get {
+                object obj = ResourceManager.GetObject("Newtonsoft_Json", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] QRCoder {
+            get {
+                object obj = ResourceManager.GetObject("QRCoder", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

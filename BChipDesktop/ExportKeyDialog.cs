@@ -37,8 +37,10 @@ namespace BChipDesktop
 
         public void ExportKeyDialog_Load(object sender, EventArgs e)
         {
-            qrCodeImage = new PictureBox();
-            qrCodeImage.Image = GetQrCode();
+            qrCodeImage = new PictureBox
+            {
+                Image = GetQrCode()
+            };
             keyAddressLabel.Text = this.QrCodeData;
         }
 
@@ -54,7 +56,7 @@ namespace BChipDesktop
             this.Visible = false;
         }
 
-        private void copyKey_Click(object sender, EventArgs e)
+        private void CopyKey_Click(object sender, EventArgs e)
         {
 
         }

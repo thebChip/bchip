@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BChipDesktop", "BChipDesktop\BChipDesktop.csproj", "{03486F36-F749-4161-8356-98EEBF8283FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BChipDesktopBeta", "BChipDesktop\BChipDesktopBeta.csproj", "{03486F36-F749-4161-8356-98EEBF8283FF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BChipTestSuite", "BChipTestSuite\BChipTestSuite.csproj", "{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}"
 EndProject
@@ -44,11 +44,9 @@ Global
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Debug|x86.Build.0 = Debug|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|ARM.ActiveCfg = Release|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|ARM.Build.0 = Release|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|x64.ActiveCfg = Release|Any CPU
-		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|x64.Build.0 = Release|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|x86.ActiveCfg = Release|Any CPU
 		{318F6E8E-F9EF-4B1E-AA03-CDF37625E9FA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection

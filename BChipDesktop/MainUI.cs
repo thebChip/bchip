@@ -1,23 +1,15 @@
-﻿using bChipDesktop;
-using NBitcoin;
+﻿using NBitcoin;
 using QRCoder;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Security;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Windows.Devices.Enumeration;
 using Windows.Devices.SmartCards;
-using Windows.Foundation.Metadata;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
 
@@ -74,6 +66,24 @@ namespace BChipDesktop
                 try
                 {
                     WriteToLogFile($"App started", "Startup");
+
+                    // Load dependencies
+                    // NOTE: This breaks the whole point of nuget packages, but makes a clean and
+                    //       easy to distribute binary.
+                    AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+                    {
+                        string resourceName = new AssemblyName(args.Name).Name + ".dll";
+                        string resource = Array.Find(this.GetType().Assembly.GetManifestResourceNames(), element => element.EndsWith(resourceName));
+
+                        using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
+                        {
+                            Byte[] assemblyData = new Byte[stream.Length];
+                            stream.Read(assemblyData, 0, assemblyData.Length);
+                            return Assembly.Load(assemblyData);
+                        }
+                    };
+
+
                     InitializeComponent();
                     SetupDataGridView();
                     HideAllPassphraseUI();
@@ -161,7 +171,7 @@ namespace BChipDesktop
             notConnectedIcon.Visible = true;
         }
 
-        private void BChipMemoryLayoutBindingSource_CurrentChanged(object sender, EventArgs e)
+        private async void BChipMemoryLayoutBindingSource_CurrentChanged(object sender, EventArgs e)
         {
             if (bChipMemoryLayoutBindingSource.Current == null)
             {
@@ -190,7 +200,7 @@ namespace BChipDesktop
                 ClearPanelUi();
                 // NOTE: Hardcoded to BCHIP format
                 loadedCardInMemory = (BChipMemoryLayout_BCHIP)bChipMemoryLayoutBindingSource.Current;
-                LoadCardInUI(loadedCardInMemory);
+                await LoadCardInUI(loadedCardInMemory);
             }
         }
 
@@ -203,53 +213,6 @@ namespace BChipDesktop
             }
 
             return;
-
-            // TODO: Remove all references, moving to data bound object
-            /// old logic
-            cardList.SelectionChanged += CardList_SelectionChanged;
-            cardList.ColumnHeadersDefaultCellStyle.BackColor = Color.Navy;
-            cardList.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            cardList.ColumnHeadersDefaultCellStyle.Font =
-                new Font(cardList.Font, FontStyle.Bold);
-
-            //cardList.AutoSizeRowsMode =
-            //    DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
-            //cardList.ColumnHeadersBorderStyle =
-            //    DataGridViewHeaderBorderStyle.Single;
-            //cardList.CellBorderStyle = DataGridViewCellBorderStyle.Single;
-            //cardList.GridColor = Color.Black;
-            cardList.RowHeadersVisible = false;
-            cardList.BorderStyle = BorderStyle.None;
-            cardList.CellBorderStyle = DataGridViewCellBorderStyle.None;
-            cardList.AllowUserToResizeRows = false;
-            cardList.ScrollBars = ScrollBars.None;
-
-            cardList.ReadOnly = true;
-
-            // ID Type Addr BChip PK
-            cardList.ColumnCount = 5;
-            cardList.Columns[0].Name = "ID";
-            cardList.Columns[0].ToolTipText = "Card Identifier";
-            cardList.Columns[1].Name = "Type";
-            cardList.Columns[1].ToolTipText = "Expected Private Key Usage";
-            cardList.Columns[2].Name = "Addr";
-            cardList.Columns[2].ToolTipText = "Copy public address to clipboard";
-            cardList.Columns[3].Name = "BChip";
-            cardList.Columns[3].ToolTipText = "Currently connected BChips";
-            cardList.Columns[4].Name = "PK";
-            cardList.Columns[4].ToolTipText = "Source of Private Key";
-
-            for (int i = 0; i < cardList.Columns.Count; ++i)
-            {
-                cardList.Columns[i].Resizable = DataGridViewTriState.False;
-                cardList.Columns[i].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                cardList.Columns[i].Width = 88;
-            }
-
-            cardList.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            cardList.MultiSelect = false;
-            cardList.Dock = DockStyle.Fill;
-
         }
 
         private void CardList_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
@@ -270,7 +233,7 @@ namespace BChipDesktop
 
         }
 
-        private void confirmWifEncrypt_Click(object sender, EventArgs e)
+        private void ConfirmWifEncrypt_Click(object sender, EventArgs e)
         {
 
         }
@@ -280,7 +243,7 @@ namespace BChipDesktop
 
         }
 
-        private void addBtn_Click(object sender, EventArgs e)
+        private void AddBtn_Click(object sender, EventArgs e)
         {
             try
             {
@@ -310,7 +273,7 @@ namespace BChipDesktop
         public const int COPY_PUBKEY_ICON = 3;
         public const int PKEY_ICON = 6;
         public const int REMOVE_ICON = 7;
-        private async void cardList_CellClick(object sender, DataGridViewCellEventArgs e)
+        private async void CardList_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridViewCell cell = 
                 cardList.Rows[e.RowIndex].Cells[e.ColumnIndex];
@@ -376,11 +339,13 @@ namespace BChipDesktop
             cardList.Rows.Add();
             
             cardList.Rows[cardList.Rows.Count - 2].Height = 50;
-            DataGridViewImageCell img = new DataGridViewImageCell();
-            img.Value = Image.FromStream(
+            DataGridViewImageCell img = new DataGridViewImageCell
+            {
+                Value = Image.FromStream(
                     Assembly.GetEntryAssembly().GetManifestResourceStream(
-                        "BChipDesktop.Assets.Editing-Copy-icon.png"));
-            
+                        "BChipDesktop.Assets.Editing-Copy-icon.png"))
+            };
+
             cardList[COPY_PUBKEY_ICON, cardList.Rows.Count - 2] = img;
         }
 
@@ -580,7 +545,7 @@ namespace BChipDesktop
             return -1;
         }
 
-        private async void bchipBtn_Click(object sender, EventArgs e)
+        private async void BchipBtn_Click(object sender, EventArgs e)
         {
             Button button = sender as Button;
 
@@ -597,8 +562,7 @@ namespace BChipDesktop
                 IBuffer result = await AdpuHandler.SendADPUCommand(card, AdpuCommand.RetrieveBody, null);
                 byte[] dataFromCard = result.ToArray();
 
-                BChipMemoryLayout_BCHIP parsedCard;
-                switch (AddPhysicalCardToList(dataFromCard, out parsedCard))
+                switch (AddPhysicalCardToList(dataFromCard, out BChipMemoryLayout_BCHIP parsedCard))
                 {
                     case AddCardResult.CardAdded:
                     case AddCardResult.CardReplaced:
@@ -660,7 +624,7 @@ namespace BChipDesktop
             importKeyTextBox.Text = string.Empty;
         }
 
-        private void sendBtn_Click(object sender, EventArgs e)
+        private void SendBtn_Click(object sender, EventArgs e)
         {
 
         }
@@ -670,22 +634,22 @@ namespace BChipDesktop
 
         }
 
-        private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void StatusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
 
         }
 
-        private void toolStripStatusLabel1_Click(object sender, EventArgs e)
+        private void ToolStripStatusLabel1_Click(object sender, EventArgs e)
         {
 
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        private void PictureBox1_Click(object sender, EventArgs e)
         {
             MessageBox.Show("This functionality is not yet implemented.", "Not Implemented");
         }
 
-        private void currencyComboBox_SelectionChangeCommitted(object sender, EventArgs e)
+        private void CurrencyComboBox_SelectionChangeCommitted(object sender, EventArgs e)
         {
             //if (currencyComboBox.SelectedText.Contains("CUSTOM"))
             //{
@@ -883,8 +847,7 @@ namespace BChipDesktop
                     return;
                 }
 
-                PKType pKType;
-                if (!Enum.TryParse(currencyComboBox.Text, out pKType))
+                if (!Enum.TryParse(currencyComboBox.Text, out PKType pKType))
                 {
                     MessageBox.Show("The key type selected cannot have a private key generated.", "KeyType not supported");
                     return;
@@ -1018,8 +981,7 @@ namespace BChipDesktop
             byte[] dataToEncrypt;
             byte[] optionalPublicKey = null;
             BChipMemoryLayout_BCHIP cardData = bChipMemoryLayoutBindingSource.Current as BChipMemoryLayout_BCHIP;
-            PKType privateKeyType;
-            if (!Enum.TryParse(currencyComboBox.Text, out privateKeyType))
+            if (!Enum.TryParse(currencyComboBox.Text, out PKType privateKeyType))
             {
                 MessageBox.Show("The selected type is unknown, for custom key usage, please use CUSTOM.", "KeyType not supported");
                 return;

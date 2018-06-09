@@ -63,7 +63,7 @@
             this.copyKeyIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.copyKeyIcon.TabIndex = 2;
             this.copyKeyIcon.TabStop = false;
-            this.copyKeyIcon.Click += new System.EventHandler(this.copyKey_Click);
+            this.copyKeyIcon.Click += new System.EventHandler(this.CopyKey_Click);
             // 
             // keyAddressLabel
             // 
