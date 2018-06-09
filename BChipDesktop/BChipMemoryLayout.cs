@@ -371,6 +371,11 @@ namespace BChipDesktop
 
             byte[] decryptedData = Encryptor.Decrypt(this.privateKeyData.AsBuffer(), chosenPassword, chosenSalt);
 
+            if (decryptedData == null || decryptedData.Length == 0)
+            {
+                return null;
+            }
+
             byte[] parsedKeyData = new byte[expectedLength];
             for (int i = 0; i < parsedKeyData.Length; ++i)
             {

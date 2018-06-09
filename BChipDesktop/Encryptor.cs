@@ -72,11 +72,11 @@ namespace bChipDesktop
             uint iterationCount = 10000;
             GenerateKeyMaterial(passwordBuffer, saltBuffer, iterationCount, out aesKeyMaterial, out iv);
             
-            SymmetricKeyAlgorithmProvider aesProvider = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesCbcPkcs7);
-            CryptographicKey aesKey = aesProvider.CreateSymmetricKey(aesKeyMaterial);
+                SymmetricKeyAlgorithmProvider aesProvider = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesCbcPkcs7);
+                CryptographicKey aesKey = aesProvider.CreateSymmetricKey(aesKeyMaterial);
 
-            IBuffer encrypted = CryptographicEngine.Encrypt(aesKey, dataToEncrypt, iv);
-            return encrypted.ToArray();
+                IBuffer encrypted = CryptographicEngine.Encrypt(aesKey, dataToEncrypt, iv);
+                return encrypted.ToArray();
         }
 
         public static byte[] Decrypt(IBuffer dataToDecrypt, IBuffer passwordBuffer, IBuffer saltBuffer)
@@ -87,12 +87,19 @@ namespace bChipDesktop
             uint iterationCount = 10000;
             GenerateKeyMaterial(passwordBuffer, saltBuffer, iterationCount, out aesKeyMaterial, out iv);
 
-            SymmetricKeyAlgorithmProvider aesProvider = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesCbcPkcs7);
-            CryptographicKey aesKey = aesProvider.CreateSymmetricKey(aesKeyMaterial);
-            
-            // Decrypt the data and convert it back to a string
-            IBuffer decrypted = CryptographicEngine.Decrypt(aesKey, dataToDecrypt, iv);
-            return decrypted.ToArray();
+            try
+            {
+                SymmetricKeyAlgorithmProvider aesProvider = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesCbcPkcs7);
+                CryptographicKey aesKey = aesProvider.CreateSymmetricKey(aesKeyMaterial);
+
+                // Decrypt the data and convert it back to a string
+                IBuffer decrypted = CryptographicEngine.Decrypt(aesKey, dataToDecrypt, iv);
+                return decrypted.ToArray();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static void GenerateKeyMaterial(IBuffer passwordBuffer, IBuffer saltBuffer, uint iterationCount, out IBuffer keyMaterial, out IBuffer iv)

@@ -955,6 +955,13 @@ namespace BChipDesktop
 
                 BChipMemoryLayout_BCHIP bChipCard = bChipMemoryLayoutBindingSource.Current as BChipMemoryLayout_BCHIP;
                 byte[] decryptedKey = bChipCard.DecryptPrivateKeyData(PassPhrase);
+
+                if (decryptedKey == null)
+                {
+                    MessageBox.Show($"Invalid checksum while trying to decode private key data. Invalid passphrase?", "Invalid checksum");
+                    return;
+                }
+
                 Key key = null;
                 switch (bChipCard.PkType)
                 {
