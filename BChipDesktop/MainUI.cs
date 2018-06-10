@@ -989,9 +989,15 @@ namespace BChipDesktop
 
         private void importConfirmKeyButton_Click(object sender, EventArgs e)
         {
-            if (PassPhrase == null || PassPhrase.Length == 0)
+            if (PassPhrase == null || string.IsNullOrWhiteSpace(PassPhrase))
             {
                 MessageBox.Show("The passphrase must be set before importing a key to a BChip", "Passphrase Error");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(importKeyTextBox.Text))
+            {
+                MessageBox.Show("No data to import", "Input Key Error");
                 return;
             }
 
