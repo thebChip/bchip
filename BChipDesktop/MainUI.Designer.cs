@@ -32,9 +32,9 @@ namespace BChipDesktop
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainUI));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel2 = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.ReceiveBtn = new System.Windows.Forms.Button();
@@ -79,6 +79,7 @@ namespace BChipDesktop
             this.connectionStringDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pkSourceDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bChipMemoryLayoutBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.clearUI = new System.Windows.Forms.Button();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -200,6 +201,7 @@ namespace BChipDesktop
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel3.BackColor = System.Drawing.Color.White;
+            this.panel3.Controls.Add(this.clearUI);
             this.panel3.Controls.Add(this.importKeyTextBox);
             this.panel3.Controls.Add(this.importConfirmKeyButton);
             this.panel3.Controls.Add(this.keyAddressLabel);
@@ -483,14 +485,14 @@ namespace BChipDesktop
             | System.Windows.Forms.AnchorStyles.Right)));
             this.cardList.AutoGenerateColumns = false;
             this.cardList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.cardList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.cardList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.cardList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.mlviDataGridViewImageColumn,
             this.idLabelDataGridViewTextBoxColumn,
@@ -501,14 +503,14 @@ namespace BChipDesktop
             this.pkSourceDataGridViewTextBoxColumn,
             this.Remove});
             this.cardList.DataSource = this.bChipMemoryLayoutBindingSource;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.cardList.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.cardList.DefaultCellStyle = dataGridViewCellStyle6;
             this.cardList.Location = new System.Drawing.Point(0, 0);
             this.cardList.Margin = new System.Windows.Forms.Padding(4);
             this.cardList.Name = "cardList";
@@ -556,8 +558,8 @@ namespace BChipDesktop
             // idLabelDataGridViewTextBoxColumn
             // 
             this.idLabelDataGridViewTextBoxColumn.DataPropertyName = "IdLabel";
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.idLabelDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.idLabelDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle5;
             this.idLabelDataGridViewTextBoxColumn.HeaderText = "ID";
             this.idLabelDataGridViewTextBoxColumn.MinimumWidth = 80;
             this.idLabelDataGridViewTextBoxColumn.Name = "idLabelDataGridViewTextBoxColumn";
@@ -614,6 +616,17 @@ namespace BChipDesktop
             // bChipMemoryLayoutBindingSource
             // 
             this.bChipMemoryLayoutBindingSource.DataSource = typeof(BChipDesktop.BChipMemoryLayout);
+            // 
+            // clearUI
+            // 
+            this.clearUI.Location = new System.Drawing.Point(273, 653);
+            this.clearUI.Margin = new System.Windows.Forms.Padding(4);
+            this.clearUI.Name = "clearUI";
+            this.clearUI.Size = new System.Drawing.Size(123, 56);
+            this.clearUI.TabIndex = 28;
+            this.clearUI.Text = "Clear UI";
+            this.clearUI.UseVisualStyleBackColor = true;
+            this.clearUI.Click += new System.EventHandler(this.clearUI_Click);
             // 
             // MainUI
             // 
@@ -698,6 +711,7 @@ namespace BChipDesktop
         private DataGridViewImageColumn Remove;
         private TextBox importKeyTextBox;
         private Button importConfirmKeyButton;
+        private Button clearUI;
     }
 }
 

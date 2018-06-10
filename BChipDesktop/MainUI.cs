@@ -199,8 +199,15 @@ namespace BChipDesktop
 
                 ClearPanelUi();
                 // NOTE: Hardcoded to BCHIP format
-                loadedCardInMemory = (BChipMemoryLayout_BCHIP)bChipMemoryLayoutBindingSource.Current;
-                await LoadCardInUI(loadedCardInMemory);
+                try
+                {
+                    loadedCardInMemory = (BChipMemoryLayout_BCHIP)bChipMemoryLayoutBindingSource.Current;
+                    await LoadCardInUI(loadedCardInMemory);
+                }
+                catch (Exception ex)
+                {
+                    WriteToLogFile($"Exception caught while loading currently selected card: {ex.Message} - {ex.StackTrace}");
+                }
             }
         }
 
@@ -535,7 +542,15 @@ namespace BChipDesktop
                 saveToBchipBtn.Visible = true;
                 keyTypeLabel.Visible = true;
 
-                bChipMemoryLayoutBindingSource.Add(bChipCardData);
+                if (bChipMemoryLayoutBindingSource.IsSynchronized)
+                {
+                    bChipMemoryLayoutBindingSource.Add(bChipCardData);
+                }
+                else
+                {
+                    WriteToLogFile("Failed to load card UI - thread was busy already updating.", "LoadCardInUI()");
+                    return 1;
+                }
 
                 // Done
                 return 0;
@@ -601,6 +616,7 @@ namespace BChipDesktop
 
         private void ClearPanelUi()
         {
+            clearUI.Visible = false;
             qrCodeImage.Visible = false;
             keyAddressLabel.Visible = false;
             copyKeyIcon.Visible = false;
@@ -956,6 +972,8 @@ namespace BChipDesktop
                 keyAddressLabel.Text = PrivateKey;
                 keyAddressLabel.Visible = true;
                 copyKeyIcon.Visible = true;
+
+                clearUI.Visible = true;
             }
         }
 
@@ -1035,7 +1053,8 @@ namespace BChipDesktop
             
             MessageBox.Show("Private key data generated, encrypted and saved to your bchip.");
 
-            HideAllPassphraseUI();
+            ClearPanelUi();
+            bChipMemoryLayoutBindingSource.ResetCurrentItem();
         }
 
         private void cardList_RowStateChanged(object sender, DataGridViewRowStateChangedEventArgs e)
@@ -1048,6 +1067,12 @@ namespace BChipDesktop
                     bchipItem.IsConnected = (index == bChipMemoryLayoutBindingSource.Position) ;
                 }
             }
+        }
+
+        private async void clearUI_Click(object sender, EventArgs e)
+        {
+            ClearPanelUi();
+            await LoadCardInUI(loadedCardInMemory);
         }
     }
 }
