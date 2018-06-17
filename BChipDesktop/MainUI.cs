@@ -67,6 +67,8 @@ namespace BChipDesktop
                 {
                     WriteToLogFile($"App started", "Startup");
 
+                    WriteToLogFile($"Load cards on disk", "Startup");
+                
                     // Load dependencies
                     // NOTE: This breaks the whole point of nuget packages, but makes a clean and
                     //       easy to distribute binary.

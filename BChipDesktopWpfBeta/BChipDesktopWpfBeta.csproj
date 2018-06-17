@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8D4ECA2C-FAB8-4325-BA69-FAEA97D87A60}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>BChipDesktop</RootNamespace>
+    <AssemblyName>BChipDesktop</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="NBitcoin">
+      <HintPath>BinaryDependencies\NBitcoin.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>BinaryDependencies\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PCSC">
+      <HintPath>BinaryDependencies\PCSC.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PCSC.Iso7816">
+      <HintPath>BinaryDependencies\PCSC.Iso7816.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PCSC.Reactive">
+      <HintPath>BinaryDependencies\PCSC.Reactive.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="QRCoder">
+      <HintPath>BinaryDependencies\QRCoder.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>BinaryDependencies\System.Reactive.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>BinaryDependencies\System.Reactive.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>BinaryDependencies\System.Reactive.Linq.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>BinaryDependencies\System.Reactive.PlatformServices.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Windows.Threading">
+      <HintPath>BinaryDependencies\System.Reactive.Windows.Threading.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.WindowsRuntime, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Runtime.WindowsRuntime\v4.0_4.0.0.0__b77a5c561934e089\System.Runtime.WindowsRuntime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="Windows">
+      <HintPath>..\BChipDesktop\BinaryDependencies\Windows.winmd</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="AdpuHelper.cs" />
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ArrayHelpers.cs" />
+    <Compile Include="Base58Encoding.cs" />
+    <Compile Include="BChipMemoryLayout.cs" />
+    <Compile Include="BChipSmartCard.cs" />
+    <Compile Include="Encryptor.cs" />
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BinaryDependencies\PCSC.dll" />
+    <EmbeddedResource Include="BinaryDependencies\PCSC.Reactive.dll" />
+    <EmbeddedResource Include="BinaryDependencies\System.Reactive.Core.dll" />
+    <EmbeddedResource Include="BinaryDependencies\System.Reactive.Interfaces.dll" />
+    <EmbeddedResource Include="BinaryDependencies\System.Reactive.Linq.dll" />
+    <EmbeddedResource Include="BinaryDependencies\System.Reactive.PlatformServices.dll" />
+    <EmbeddedResource Include="BinaryDependencies\NBitcoin.dll" />
+    <EmbeddedResource Include="BinaryDependencies\Newtonsoft.Json.dll" />
+    <EmbeddedResource Include="BinaryDependencies\QRCoder.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BinaryDependencies\System.Reactive.Windows.Threading.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BinaryDependencies\PCSC.Iso7816.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Connected-icon.PNG" />
+    <Resource Include="Assets\Data-List-icon.png" />
+    <Resource Include="Assets\DataList-icon.png" />
+    <Resource Include="Assets\Delete-icon.PNG" />
+    <Resource Include="Assets\DeleteX-icon.png" />
+    <Resource Include="Assets\Editing-Copy-icon.png" />
+    <Resource Include="Assets\Full-Cart-icon.png" />
+    <Resource Include="Assets\if_card_inserting_309029.png" />
+    <Resource Include="Assets\Mobile-Sim-Card-Chip-icon.png" />
+    <Resource Include="Assets\No-Copy-icon.png" />
+    <Resource Include="Assets\NotConnected-icon.PNG" />
+    <Resource Include="Assets\Printer-icon.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

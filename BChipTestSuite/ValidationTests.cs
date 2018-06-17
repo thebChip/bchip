@@ -53,7 +53,7 @@ namespace BChipTestSuite
                 Assert.IsTrue(toEncrypt[i] == expectedToEnc[i], $"Byte[{i}] did not match: {toEncrypt[i]}!={expectedToEnc[i]}");
             }
 
-            byte[] encryptedData = Encryptor.Encrypt(toEnc, chosenPassword.AsBuffer(), chosenSalt.AsBuffer());
+            byte[] encryptedData = Encryptor.Encrypt(toEnc, chosenPassword.AsBuffer(), chosenSalt.AsBuffer()).ToArray();
             byte[] expectedEncBytes = new byte[]
                 { 0x8b, 0x2d,0x75,0xa6,0x36,0x29,0x2d,0x08,0x41,0x41,0x81,0x8a,0x02,0x35, 0xfa,0x19,
                   0x4e,0x16,0x74,0xe8,0x01,0xa9,0x14,0xba,0xbe,0xde, 0xbe, 0xc2, 0xd4, 0x9d, 0xda, 0x72 };
@@ -64,7 +64,7 @@ namespace BChipTestSuite
             }
         
             // Decrypt
-            byte[] decryptedData = Encryptor.Decrypt(encryptedData.AsBuffer(), chosenPassword.AsBuffer(), chosenSalt.AsBuffer());
+            byte[] decryptedData = Encryptor.Decrypt(encryptedData.AsBuffer(), chosenPassword.AsBuffer(), chosenSalt.AsBuffer()).ToArray();
             byte[] expectedDecBytes = new byte[] { 0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x73, 0x6d, 0x61, 0x6c, 0x6c, 0x20, 0x74, 0x65, 0x73, 0x74, 0x2e };
             Assert.IsTrue(decryptedData.Length == expectedDecBytes.Length, $"Expected number of bytes was {expectedDecBytes.Length} bytes, had {decryptedData.Length}.");
             for (int i = 0; i < expectedDecBytes.Length; i++)
@@ -103,8 +103,8 @@ namespace BChipTestSuite
             
             BChipMemoryLayout_BCHIP bChipCardData =
                 new BChipMemoryLayout_BCHIP(
-                    mlvi.AsBuffer(),
-                    simulatedCard.ToArray().AsBuffer(),
+                    mlvi,
+                    simulatedCard.ToArray(),
                     false,
                     PKStatus.NotAvailable);
 
