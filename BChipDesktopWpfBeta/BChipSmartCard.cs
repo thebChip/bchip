@@ -68,6 +68,8 @@ namespace BChipDesktop
         public string CardName { get; set; }
         public byte[] ATR { get; set; }
         public DateTime LastConnected { get; set; }
+        public bool IsConnected { get; set; }
+        public BChipMemoryLayout SmartCardData { get; set; }
 
         public CardType Type()
         {

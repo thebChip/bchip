@@ -376,6 +376,26 @@ namespace BChipDesktop
             return checksum;
         }
 
+        public bool IsChecksumValid()
+        {
+            byte[] expectedCrc = this.crcData;
+            byte[] crc = this.GetCardCheckSum();
+            if (expectedCrc.Length != crc.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < BChipMemoryLayout_BCHIP.CRC_MAX_SIZE; ++i)
+            {
+                if (expectedCrc[i] != crc[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public override async Task<Response> WriteDataToCard(IContextFactory context, string cardReader)
         {
             using (var ctx = context.Establish(SCardScope.System))

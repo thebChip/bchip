@@ -5,13 +5,51 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BChipDesktop"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" Closing="Window_Closing" Icon="icon.ico">
+        Title="bChip Desktop Beta" Height="468.544" Width="525" Closing="Window_Closing" Icon="icon.ico">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="126*"/>
-            <ColumnDefinition Width="47*"/>
-        </Grid.ColumnDefinitions>
+        <StackPanel Name="InsertCardGrid" Visibility="Collapsed">
+            <Label Content="Please insert BChip into smart card reader" HorizontalAlignment="Center" Margin="0,100,0,0" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Height="45" Width="422"/>
+            <Image HorizontalAlignment="Center" Height="96" Margin="0,0,0,0" VerticalAlignment="Top" Width="100" Source="Assets/NotConnected-icon.PNG"/>
+        </StackPanel>
+        <Grid Name="NonInitializedWizardViewGrid" Visibility="Visible">
 
+        </Grid>
+        <Grid Name="InitializedUnknownCardViewGrid" Visibility="Visible">
 
+        </Grid>
+        <StackPanel Name="ReadyCardViewGrid" Visibility="Collapsed" Margin="0,0,0,0">
+            <Image x:Name="QrCodeImage" HorizontalAlignment="Center" Height="156" Width="155" Margin="179,50,184.667,0" Source="Assets/tempQr.PNG" />
+            <Grid Margin="0,30,-0.333,0" 
+                  TouchDown="PublicKeyAddressLabel_TouchDown"
+                  MouseDown="PublicKeyAddressLabel_TouchDown"
+                  >
+                <Label x:Name="PublicKeyAddressLabel" 
+                   Content="cQ2nme8bg4JQhUdbca4PUC5Jb5cxs6CH9pz5fXUJFwbGnh9v9Tqv" FontSize="14"
+                   HorizontalAlignment="Center" Margin="66,10,9,-0.333" Width="444" Foreground="#FF0800FF" 
+                   />
+                <Image Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" />
+            </Grid>
+            <Button Content="Display Private Key" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="108" Click="DisplayPrivateKey_Click"/>
+        </StackPanel>
+        <StackPanel Name="ShowPassphraseViewGrid" Visibility="Collapsed" Margin="0,0,0,0">
+            <Grid Margin="0,200,-0.333,0" Height="35">
+               <PasswordBox Name="PassphraseEntryBox" FontSize="16"/>
+            </Grid>
+            <Button Content="Decrypt Private Key" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="121" Click="DecryptButton_Click"/>
+        </StackPanel>
+        <StackPanel Name="ShowPrivateKeyViewGrid" Visibility="Collapsed" Margin="0,0,0,0">
+            <Image x:Name="PrivateQrCodeImage" HorizontalAlignment="Center" Height="156" Width="155" Margin="179,50,184.667,0" Source="Assets/tempQr.PNG" />
+            <Grid Margin="0,30,-0.333,0" 
+                  TouchDown="PrivateKeyAddressLabel_TouchDown"
+                  MouseDown="PrivateKeyAddressLabel_TouchDown"
+                  >
+                <Label x:Name="PrivateKeyAddressLabel" 
+                   Content="cQ2nme8bg4JQhUdbca4PUC5Jb5cxs6CH9pz5fXUJFwbGnh9v9Tqv" FontSize="14"
+                   HorizontalAlignment="Center" Margin="66,10,9,-0.333" Width="444" Foreground="#FF0800FF" 
+                   />
+                <Image Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" />
+            </Grid>
+            <Button Content="Clear" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="108" Click="ClearButton_Click"/>
+        </StackPanel>
     </Grid>
 </Window>
