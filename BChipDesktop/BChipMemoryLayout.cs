@@ -58,22 +58,6 @@ namespace BChipDesktop
         }
 
         public abstract string IdLabel { get; }
-        public virtual byte[] AddressCopyIcon
-        {
-            get
-            {
-                List<byte> copyIcon = new List<byte>();
-                Stream imageStream = Assembly.GetEntryAssembly().GetManifestResourceStream(
-                        "No-Copy-icon.png");
-                int b = imageStream.ReadByte();
-                while (b != -1)
-                {
-                    copyIcon.Add((byte)b);
-                    b = imageStream.ReadByte();
-                }
-                return copyIcon.ToArray();
-            }
-        }
         public abstract string CardTypeLabel { get; }
         public abstract string PublicAddress { get; }
         public abstract bool IsConnected { get; set; }
@@ -462,22 +446,6 @@ namespace BChipDesktop
                 }
 
                 return formattedId.ToString();
-            }
-        }
-        public override byte[] AddressCopyIcon
-        {
-            get
-            {
-                List<byte> copyIcon = new List<byte>();
-                Stream imageStream = Assembly.GetEntryAssembly().GetManifestResourceStream(
-                        "BChipDesktop.Assets.Editing-Copy-icon.png");
-                int b = imageStream.ReadByte();
-                while (b != -1)
-                {
-                    copyIcon.Add((byte)b);
-                    b = imageStream.ReadByte();
-                }
-                return copyIcon.ToArray();
             }
         }
 

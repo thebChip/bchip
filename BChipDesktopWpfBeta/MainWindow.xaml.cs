@@ -155,11 +155,27 @@ namespace BChipDesktop
                 // Populate for card UI
                 if (pageToShow == PageToShow.Ready)
                 {
-                    QrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
-                           new QrHandler(bChipSmartCard.SmartCardData.PublicAddress, 5).GetQrCode().GetHbitmap(),
-                           IntPtr.Zero,
-                           Int32Rect.Empty,
-                           BitmapSizeOptions.FromEmptyOptions()); 
+                    PubKeyCopyIcon.Visibility = Visibility.Hidden;
+                    BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)bChipSmartCard.SmartCardData;
+                    string publicAddress = bchip.PublicAddress;
+                    if (publicAddress == "")
+                    {
+                        PublicKeyAddressLabel.Content = "No public key data on card";
+                    }
+                    else if (publicAddress == null)
+                    {
+                        PublicKeyAddressLabel.Content = "Failed to parse public key data";
+                    }
+                    else
+                    {
+                        QrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
+                               new QrHandler(publicAddress, 5).GetQrCode().GetHbitmap(),
+                               IntPtr.Zero,
+                               Int32Rect.Empty,
+                               BitmapSizeOptions.FromEmptyOptions());
+                        PubKeyCopyIcon.Visibility = Visibility.Visible;
+                        PublicKeyAddressLabel.Content = publicAddress;
+                    }
                 }
             }));
         }
@@ -447,6 +463,9 @@ namespace BChipDesktop
         private void DecryptButton_Click(object sender, RoutedEventArgs e)
         {
             ShowPassphraseViewGrid.Visibility = Visibility.Collapsed;
+
+            //DecryptedPrivateKeyString
+            // Decrypt ok?
             ShowPrivateKeyViewGrid.Visibility = Visibility.Visible;
         }
 

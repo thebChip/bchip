@@ -1,4 +1,5 @@
 ﻿using bChipDesktop;
+using NBitcoin;
 using PCSC;
 using PCSC.Iso7816;
 using System;
@@ -59,22 +60,6 @@ namespace BChipDesktop
         }
 
         public abstract string IdLabel { get; }
-        public virtual byte[] AddressCopyIcon
-        {
-            get
-            {
-                List<byte> copyIcon = new List<byte>();
-                Stream imageStream = Assembly.GetEntryAssembly().GetManifestResourceStream(
-                        "No-Copy-icon.png");
-                int b = imageStream.ReadByte();
-                while (b != -1)
-                {
-                    copyIcon.Add((byte)b);
-                    b = imageStream.ReadByte();
-                }
-                return copyIcon.ToArray();
-            }
-        }
         public abstract string CardTypeLabel { get; }
         public abstract string PublicAddress { get; }
         public abstract bool IsConnected { get; set; }
@@ -215,9 +200,11 @@ namespace BChipDesktop
         // 32 bytes
         // 00-07: Private Key Type Identifier (Private key source)
         // 01   : PK length (32, 64 or 96)
+        // 02   : PubKey length (0-64 bytes)
         //        See PKType enum. Bytes 1-7 unused.
         public const int VID_PKTYPE_ADDR = 0;
         public const int VID_PKLEN_ADDR = 1;
+        public const int VID_PUKLEN_ADDR = 2;
         // 08-15: Build version identifier
         public const int VID_BUILD_VERSION = 8;
         // 16-23: Reserved for future use
@@ -301,6 +288,11 @@ namespace BChipDesktop
             if (publicKey != null)
             {
                 pubKeyLen = publicKey.Length;
+                bchipVIDent[VID_PUKLEN_ADDR] = (byte)pubKeyLen;
+            }
+            else
+            {
+                bchipVIDent[VID_PUKLEN_ADDR] = 0;
             }
             for (int i = 0; i < publicKeyData.Length; ++i)
             {
@@ -422,23 +414,7 @@ namespace BChipDesktop
                 return formattedId.ToString();
             }
         }
-        public override byte[] AddressCopyIcon
-        {
-            get
-            {
-                List<byte> copyIcon = new List<byte>();
-                Stream imageStream = Assembly.GetEntryAssembly().GetManifestResourceStream(
-                        "BChipDesktop.Assets.Editing-Copy-icon.png");
-                int b = imageStream.ReadByte();
-                while (b != -1)
-                {
-                    copyIcon.Add((byte)b);
-                    b = imageStream.ReadByte();
-                }
-                return copyIcon.ToArray();
-            }
-        }
-
+        
         public PKType PkType
         {
             get
@@ -466,12 +442,87 @@ namespace BChipDesktop
                 }
             }
         }
-        public override string PublicAddress
-        { get
+
+        public string DecryptedPrivateKeyString(string passphrase)
+        {
+            byte[] decryptedKey = this.DecryptPrivateKeyData(passphrase);
+
+            if (decryptedKey == null)
             {
-                return "Not implemented";
+                // Decrypt fail
+                return "";
+            }
+
+            try
+            {
+                string privateKey;
+                Key key = null;
+                switch (this.PkType)
+                {
+                    case PKType.BTC:
+                        key = new Key(decryptedKey);
+                        privateKey = key.GetWif(Network.Main).ToWif();
+                        break;
+                    case PKType.BTC_TestNet:
+                        key = new Key(decryptedKey);
+                        privateKey = key.GetWif(Network.TestNet).ToWif();
+                        break;
+                    // Generic failsafe, no parsing/validation
+                    case PKType.UNSET:
+                    case PKType.ETH:
+                    case PKType.CUSTOM:
+                    default:
+                        privateKey = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, decryptedKey.AsBuffer());
+                        break;
+                }
+
+                return privateKey;
+            }
+            catch
+            {
+                // Exception on import
+                return null;
             }
         }
+        
+        public override string PublicAddress
+        {
+            get
+            {
+                try
+                {
+                    // older card work around
+                    if (bchipVIDent[VID_PUKLEN_ADDR] == 0xFF && 
+                        (this.PkType == PKType.BTC || this.PkType == PKType.BTC_TestNet))
+                    {
+                        bchipVIDent[VID_PUKLEN_ADDR] = 0x21;
+                    }
+
+                    if (bchipVIDent[VID_PUKLEN_ADDR] != 0 && bchipVIDent[VID_PUKLEN_ADDR] != 0xFF)
+                    {
+                        byte[] pubKeyData = this.publicKeyData.Take(bchipVIDent[VID_PUKLEN_ADDR]).ToArray();
+                        switch (this.PkType)
+                        {
+                            case PKType.BTC:
+                                return new PubKey(pubKeyData).GetAddress(Network.Main).ToString();
+                            case PKType.BTC_TestNet:
+                                return new PubKey(pubKeyData).GetAddress(Network.TestNet).ToString();
+                            case PKType.UNSET:
+                            case PKType.ETH:
+                            case PKType.CUSTOM:
+                            default:
+                                return CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, pubKeyData.AsBuffer());
+                        }
+                    }
+                    return "";
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
         public override string ConnectionString
         { get
             {
