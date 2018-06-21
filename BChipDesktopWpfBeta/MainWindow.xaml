@@ -7,18 +7,69 @@
         mc:Ignorable="d"
         Title="bChip Desktop Beta" Height="400" Width="560" Closing="Window_Closing" Icon="icon.ico">
     <Grid>
-        <StackPanel Name="InsertCardGrid" Visibility="Collapsed">
-            <Label Content="Please insert BChip into smart card reader" HorizontalAlignment="Center" Margin="0,100,0,0" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Height="45" Width="422"/>
-            <Image HorizontalAlignment="Center" Height="96" Margin="0,0,0,0" VerticalAlignment="Top" Width="100" Source="Assets/NotConnected-icon.PNG"/>
+        <StackPanel Name="InsertCardGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Label Content="Please insert BChip into smart card reader" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" />
+            <Image HorizontalAlignment="Center" Height="96"  VerticalAlignment="Bottom" Width="100" Source="Assets/NotConnected-icon.PNG"/>
         </StackPanel>
-        <Grid Name="NonInitializedWizardViewGrid" Visibility="Visible">
-
+        <StackPanel Name="NonInitializedWizardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Label 
+                   Content="This bChip is ready to be initialized." FontSize="14"
+                   HorizontalAlignment="left"
+                   />
+            <Label  
+                   Content="Chose the type of private key you want to provision on this card" FontSize="14"
+                   HorizontalAlignment="Center"
+                   />
+            <ComboBox>
+                <Button Content="Bitcoin" Click="CreateBtcWallet_Click"/>
+                <Button Content="Bitcoin - Test Net" Click="CreateBtcTestnetWallet_Click"/>
+                <Button Content="Custom - no automatic validation" Click="CreateCustomButton_Click"/>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock  Text="You must choose a secure passphrase. It is extremely important you never forget your passphrase - there is absolutely no recovery. Enter it twice." FontSize="14"
+                   HorizontalAlignment="Center" Height="48" Width="548" TextWrapping="Wrap" TextAlignment="Center"
+                   />
+            <Grid>
+                <PasswordBox HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
+                <PasswordBox HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
+            </Grid>
+            <TextBlock  Text="A default public / private key pair has been generated for you. You may replace the private key data with a seed phrase mnemonic." FontSize="14"
+                   HorizontalAlignment="Center" Width="548" TextWrapping="Wrap" TextAlignment="Center"
+                   />
+            <Grid>
+                <Label Content="Public Key Data (optional)" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
+                <Label Content="Private Key Data (will be encrypted)" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
+            </Grid>
+            <Grid>
+                <TextBox Name="PublicKeyTextBox" MinLines="5" MaxLength="64" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
+                <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
+            </Grid>
+            <Button Name="ProvisionCardButton" Content="Provision bChip" Width="150" MinHeight="30"/>
+            <Label Name="CreateKeyErrorLabel" Content="" 
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                   FontSize="20" FontWeight="Bold" Foreground="#FFD10E0E"/>
+        </StackPanel>
+        <Grid Name="CrcErrorViewGrid" Visibility="Collapsed" VerticalAlignment="Center">
+            <Label Content="Card CRC validation failed. Try inserting it again?" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Margin="0,-49,0,0" Foreground="#FFD10E0E"/>
+            <Image HorizontalAlignment="Center" Height="96" VerticalAlignment="Bottom" Width="100" Source="Assets/Sad-icon.PNG"/>
         </Grid>
-        <Grid Name="InitializedUnknownCardViewGrid" Visibility="Visible">
-
+        <Grid Name="InitializedUnknownCardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Label Content="Failed to read card, are you running the latest app?" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Margin="0,-49,0,0" Foreground="#FFD10E0E"/>
+            <Image HorizontalAlignment="Center" Height="96" VerticalAlignment="Bottom" Width="100" Source="Assets/Sad-icon.PNG"/>
         </Grid>
-        <StackPanel Name="ReadyCardViewGrid" Visibility="Collapsed" Margin="0,0,0,0">
-            <Image x:Name="QrCodeImage" HorizontalAlignment="Center" Height="156" Width="155" Margin="179,50,184.667,0" />
+        <StackPanel Name="ReadyCardViewGrid" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Grid Grid.Row="0">
+            <Label  
+                   Content="bChip ID:" FontSize="14"
+                   HorizontalAlignment="Left"
+                   />
+            <Label x:Name="BChipIdLabel" 
+                   Content="XXXX XXXX XXXX XXXX" FontSize="14"
+                   HorizontalAlignment="Center"
+                   />
+            </Grid>
+            <Image x:Name="QrCodeImage" Height="156" Width="155" />
             <Grid Margin="0,30,-0.333,0" 
                   TouchDown="PublicKeyAddressLabel_TouchDown"
                   MouseDown="PublicKeyAddressLabel_TouchDown"
@@ -29,13 +80,40 @@
                    />
                 <Image Name="PubKeyCopyIcon" Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" Stretch="None" />
             </Grid>
-            <Button Content="Display Private Key" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="108" Click="DisplayPrivateKey_Click"/>
-        </StackPanel>
-        <StackPanel Name="ShowPassphraseViewGrid" Visibility="Collapsed" Margin="0,0,0,0">
-            <Grid Margin="0,200,-0.333,0" Height="35">
-               <PasswordBox Name="PassphraseEntryBox" FontSize="16"/>
+            <Grid>
+                <Button Name="DisplayPrivateKeyButton" Content="Display Private Key" HorizontalAlignment="Center" Height="33" Width="108" Click="DisplayPrivateKey_Click" VerticalAlignment="Bottom" Margin="0,-4,414.667,4.333"/>
+                <Button Content="Erase Card" HorizontalAlignment="Right" Height="33" Width="108" Click="FormatCard_Click" VerticalAlignment="Bottom" Margin="0,-4,19.667,4.333"/>
             </Grid>
-            <Button Content="Decrypt Private Key" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="121" Click="DecryptButton_Click"/>
+        </StackPanel>
+        <StackPanel Name="ConfirmFormatViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom">
+            <Label Content="WARNING: Formatting a bchip will PERMANENTLY erase all data." FontSize="16"
+                   HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" 
+                   />
+            <Label Content="To confirm format, type yes below."
+                   HorizontalAlignment="Center"                    />
+            <Grid Height="35">
+                <TextBox Name="FormatConfirmTextBox" FontSize="16"/>
+            </Grid>
+            <Grid>
+                <Button Content="Confirm" HorizontalAlignment="Center" Height="33" Width="121" Click="ConfirmButton_Click"/>
+                <Button Content="Cancel" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click"/>
+            </Grid>
+        </StackPanel>
+        <StackPanel Name="FormatingViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom">
+            <Label Content="Formatting... Do not remove bchip or unplug the reader!" FontSize="16"
+                   HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" 
+                   />
+        </StackPanel>
+        <StackPanel Name="ShowPassphraseViewGrid" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Label Content="Enter your bChips passphrase to decrypt data" FontSize="14" />
+            <Grid Height="35">
+                <PasswordBox Name="PassphraseEntryBox" FontSize="16" Width="300"/>
+            </Grid>
+            <Grid>
+                <Button Name="DecryptButton" Content="Decrypt Private Key" HorizontalAlignment="Left" Height="33" Width="121" Click="DecryptButton_Click"/>
+                <Button Content="Go Back" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click"/>
+            </Grid>
+            <Label Name="ErrorMessageLabel" Content="Error Message" FontSize="14" Foreground="#FFC81F1F" />
         </StackPanel>
         <StackPanel Name="ShowPrivateKeyViewGrid" Visibility="Collapsed" Margin="0,0,0,0">
             <Image x:Name="PrivateQrCodeImage" HorizontalAlignment="Center" Height="156" Width="155" Margin="179,50,184.667,0"  />
@@ -49,7 +127,7 @@
                    />
                 <Image Name="PrivateKeyCopyIcon" Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" Stretch="None" />
             </Grid>
-            <Button Content="Clear" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="108" Click="ClearButton_Click"/>
+            <Button Content="Clear" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="108" Click="ClearCancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

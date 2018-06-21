@@ -122,30 +122,87 @@ namespace BChipDesktop
         public enum PageToShow
         {
             NoCard,
+            ShowPassphraseDialog,
+            Ready,
+            ConfirmFormat,
+            // TODO
             NotInitialized,
             Error,
             CrcError,
             Unsupported,
-            Ready
         }
         public void ChangePageUi(PageToShow pageToShow, BChipSmartCard bChipSmartCard)
         {
             Visibility noCardVisibility = Visibility.Collapsed;
             Visibility readyVisibility = Visibility.Collapsed;
+            Visibility confirmFormatVisibility = Visibility.Collapsed;
+            Visibility passphraseDialogVisibility = Visibility.Collapsed;
+
+            Visibility notInitializedWizardVisibility = Visibility.Collapsed;
+            Visibility crcErrorViewGridVisibility = Visibility.Collapsed;
+            Visibility unsupportedDialogVisibility = Visibility.Collapsed;
+
 
             switch (pageToShow)
             {
-                case PageToShow.NoCard:
-                    noCardVisibility = Visibility.Visible;
+                case PageToShow.ConfirmFormat:
+                    confirmFormatVisibility = Visibility.Visible;
                     break;
                 case PageToShow.Ready:
                     readyVisibility = Visibility.Visible;
+                    break;
+                case PageToShow.ShowPassphraseDialog:
+                    passphraseDialogVisibility = Visibility.Visible;
+                    break;
+                case PageToShow.NoCard:
+                    noCardVisibility = Visibility.Visible;
+                    break;
+                case PageToShow.Unsupported:
+                case PageToShow.Error:
+                    unsupportedDialogVisibility = Visibility.Visible;
+                    break;
+                case PageToShow.NotInitialized:
+                    notInitializedWizardVisibility = Visibility.Visible;
+                    break;
+                case PageToShow.CrcError:
+                    crcErrorViewGridVisibility = Visibility.Visible;
                     break;
             }
 
             InsertCardGrid.Dispatcher.BeginInvoke(new Action(() =>
             {
+                NonInitializedWizardViewGrid.Visibility = notInitializedWizardVisibility;
+            }));
+
+            CrcErrorViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                CrcErrorViewGrid.Visibility = crcErrorViewGridVisibility;
+            }));
+
+            InitializedUnknownCardViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                InitializedUnknownCardViewGrid.Visibility = unsupportedDialogVisibility;
+            }));
+
+            ShowPassphraseViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ShowPassphraseViewGrid.Visibility = passphraseDialogVisibility;
+
+                if (pageToShow == PageToShow.ShowPassphraseDialog)
+                {
+                    // Clear last error if set
+                    ErrorMessageLabel.Content = "";
+                }
+            }));
+
+            InsertCardGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
                 InsertCardGrid.Visibility = noCardVisibility;
+            }));
+
+            ConfirmFormatViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ConfirmFormatViewGrid.Visibility = confirmFormatVisibility;
             }));
 
             ReadyCardViewGrid.Dispatcher.BeginInvoke(new Action(() =>
@@ -157,10 +214,19 @@ namespace BChipDesktop
                 {
                     PubKeyCopyIcon.Visibility = Visibility.Hidden;
                     BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)bChipSmartCard.SmartCardData;
+                    BChipIdLabel.Content = bchip.IdLabel;
                     string publicAddress = bchip.PublicAddress;
                     if (publicAddress == "")
                     {
-                        PublicKeyAddressLabel.Content = "No public key data on card";
+                        if (bchip.PkType == PKType.UNSET)
+                        {
+                            PublicKeyAddressLabel.Content = "Card not provisioned";
+                            DisplayPrivateKeyButton.IsEnabled = false;
+                        } 
+                        else
+                        {
+                            PublicKeyAddressLabel.Content = "No public key data on card";
+                        }
                     }
                     else if (publicAddress == null)
                     {
@@ -175,6 +241,11 @@ namespace BChipDesktop
                                BitmapSizeOptions.FromEmptyOptions());
                         PubKeyCopyIcon.Visibility = Visibility.Visible;
                         PublicKeyAddressLabel.Content = publicAddress;
+                    }
+
+                    if (bchip.PkType != PKType.UNSET)
+                    {
+                        DisplayPrivateKeyButton.IsEnabled = true;
                     }
                 }
             }));
@@ -197,7 +268,7 @@ namespace BChipDesktop
             {
                 BChipMemoryLayout_BCHIP cardMemory = (BChipMemoryLayout_BCHIP)bChipSmartCard.SmartCardData;
 
-                if (cardMemory.NotInitialized || cardMemory.IsFormatted)
+                if (cardMemory.IsFormatted)
                 {
                     return PageToShow.NotInitialized;
                 }
@@ -301,7 +372,7 @@ namespace BChipDesktop
                                 insertedCard.SmartCardData = new BChipMemoryLayout_BCHIP(mlvi, carddata, true, PKStatus.NotValidated);
                                 LoadedBChips = insertedCard;
 
-                                ChangePageUi(PageToShow.Ready, insertedCard);
+                                ChangePageUi(AnalyzeCardData(insertedCard), insertedCard);
                             }
                             else
                             {
@@ -320,6 +391,11 @@ namespace BChipDesktop
             {
                 return context.GetReaders();
             }
+        }
+
+        public async void WriteToLogFile(string request, Response adpuResponse, string source = "ADPU Response")
+        {
+            WriteToLogFile($"ADPU response from {request}: {adpuResponse.StatusWord}", source); 
         }
 
         public async void WriteToLogFile(string dataToLog, string source = "General")
@@ -440,8 +516,18 @@ namespace BChipDesktop
 
         private void CopyAddressToClipBoard()
         {
-            Clipboard.SetText(PublicKeyAddressLabel.Content.ToString());
-            MessageBox.Show($"Your public key has been copied to your clipboard!");
+            if (LoadedBChips != null)
+            {
+                BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)LoadedBChips.SmartCardData;
+                if (
+                    bchip.bchipVIDent[BChipMemoryLayout_BCHIP.VID_PUKLEN_ADDR] != 0 &&
+                    bchip.bchipVIDent[BChipMemoryLayout_BCHIP.VID_PUKLEN_ADDR] != 0xFF
+                    )
+                {
+                    Clipboard.SetText(PublicKeyAddressLabel.Content.ToString());
+                    MessageBox.Show($"Your public key has been copied to your clipboard!");
+                }
+            }
         }
 
         private void PublicKeyAddressLabel_TouchDown(object sender, TouchEventArgs e)
@@ -458,32 +544,106 @@ namespace BChipDesktop
         {
             ReadyCardViewGrid.Visibility = Visibility.Collapsed;
             ShowPassphraseViewGrid.Visibility = Visibility.Visible;
+            ChangePageUi(PageToShow.ShowPassphraseDialog, LoadedBChips);
         }
 
         private void DecryptButton_Click(object sender, RoutedEventArgs e)
         {
             ShowPassphraseViewGrid.Visibility = Visibility.Collapsed;
 
-            //DecryptedPrivateKeyString
-            // Decrypt ok?
-            ShowPrivateKeyViewGrid.Visibility = Visibility.Visible;
+            try
+            {
+                BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)LoadedBChips.SmartCardData;
+                string pk = bchip.DecryptedPrivateKeyString(PassphraseEntryBox.Password);
+
+                PrivateKeyAddressLabel.Content = pk;
+                QrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
+                   new QrHandler(pk, 5).GetQrCode().GetHbitmap(),
+                   IntPtr.Zero,
+                   Int32Rect.Empty,
+                   BitmapSizeOptions.FromEmptyOptions());
+                
+                ShowPrivateKeyViewGrid.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                ShowPassphraseViewGrid.Visibility = Visibility.Visible;
+                ErrorMessageLabel.Content = "Exception hit - passphrase?";
+            }
         }
 
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        private void ClearCancelButton_Click(object sender, RoutedEventArgs e)
         {
             ShowPrivateKeyViewGrid.Visibility = Visibility.Collapsed;
-            ReadyCardViewGrid.Visibility = Visibility.Visible;
+            ConfirmFormatViewGrid.Visibility = Visibility.Collapsed;
+            if (LoadedBChips != null)
+            {
+                ChangePageUi(PageToShow.Ready, LoadedBChips);
+            }
+        }
+
+        private void CopyPrivateAddressToClipBoard()
+        {
+            Clipboard.SetText(PrivateKeyAddressLabel.Content.ToString());
+            MessageBox.Show($"Your private key has been copied to your clipboard - make sure you clear it as soon as possible.");
         }
 
         private void PrivateKeyAddressLabel_TouchDown(object sender, MouseButtonEventArgs e)
         {
-
+            CopyPrivateAddressToClipBoard();
         }
 
         private void PrivateKeyAddressLabel_TouchDown(object sender, TouchEventArgs e)
         {
-
+            CopyPrivateAddressToClipBoard();
         }
 
+        private async void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (FormatConfirmTextBox.Text.Trim().ToLowerInvariant().Contains("yes"))
+            {
+                try
+                {
+                    var res = FormatingViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        FormatingViewGrid.Visibility = Visibility.Visible;
+                    }));
+
+                    using (var context = _contextFactory.Establish(SCardScope.System))
+                    {
+                        using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
+                        {
+                            var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
+                            WriteToLogFile("CardUnblock", unlockResponse);
+                            var writeResponse = isoReader.Transmit(AdpuHelper.FormatCard(CardType.BChip));
+                            WriteToLogFile("FormatCard", writeResponse);
+                        }
+                    }
+                    LoadedBChips = null;
+                    ScanAndLoadConnectedCards();
+                }
+                catch (Exception ex)
+                { }
+                finally
+                {
+                    var res = FormatingViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        FormatingViewGrid.Visibility = Visibility.Collapsed;
+                    }));
+                }
+            }
+
+            ClearCancelButton_Click(sender, e);
+        }
+
+        private void FormatCard_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePageUi(PageToShow.ConfirmFormat, LoadedBChips);
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+           var selection = e.AddedItems;
+        }
     }
 }

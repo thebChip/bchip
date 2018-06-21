@@ -70,49 +70,6 @@ namespace BChipDesktop
         public CardType cardType { get; private set; }
 
         public abstract Task<Response> WriteDataToCard(IContextFactory context, string cardReader);
-
-        /// <summary>
-        /// Format's a BChip for use by the user. If no identifier is specified, a random one is created.
-        /// NB: If the BChip carries its identifier in the ROM, it cannot be changed. If the card has had too many
-        ///     wrong PIN attempts (3 bytes), it will either be permantly in READ ONLY mode or permanently disabled.
-        /// </summary>
-        public static async Task<Response> FormatCard(
-            IContextFactory context,
-            string cardReader,
-            CardType cardType,
-            byte[] customIdentifier = null)
-        {
-            using (var ctx = context.Establish(SCardScope.System))
-            {
-                using (var isoReader = new IsoReader(ctx, cardReader, SCardShareMode.Shared, SCardProtocol.Any))
-                {
-                    List<byte> mlvi = new List<byte>();
-                    mlvi.Add((byte)cardType);
-
-                    if (customIdentifier == null)
-                    {
-                        byte[] rnd = new byte[7];
-                        RandomNumberGenerator.Create().GetBytes(rnd);
-                        mlvi.AddRange(rnd);
-                    }
-                    else
-                    {
-                        if (customIdentifier.Length != 7)
-                        {
-                            throw new FormatException("Custom identifier should be exactly 7 bytes of data.");
-                        }
-                        mlvi.AddRange(customIdentifier.ToArray());
-                    }
-
-                    BChipMemoryLayout_BCHIP bChipMemoryLayout =
-                        new BChipMemoryLayout_BCHIP(mlvi.ToArray());
-
-                    var response = isoReader.Transmit(AdpuHelper.SendPin());
-                    response = isoReader.Transmit(AdpuHelper.WriteCardData(bChipMemoryLayout));
-                    return response;
-                }
-            }
-        }
     }
 
     /// Regions for initial bChip release (v0a): 
@@ -167,17 +124,6 @@ namespace BChipDesktop
         
         public override bool IsConnected { get; set; }
         public PKStatus PkStatus { get; private set; }
-
-        public bool NotInitialized
-        {
-            get
-            {
-                return
-                    // A card that shouldn't be written to, but will nuke all data.
-                    (Salt.Where(a => a == 0x55).Count() == Salt.Length) &&
-                    (privateKeyData.Where(a => a == 0x00).Count() == privateKeyData.Length);
-            }
-        }
 
         public bool IsFormatted
         {
@@ -332,7 +278,7 @@ namespace BChipDesktop
             IBuffer chosenPassword = potPasswords[generatedPin % potPasswords.Count].AsBuffer();
             IBuffer chosenSalt = Encryptor.GenerateSalt(this.Salt).AsBuffer();
 
-            byte[] decryptedData = Encryptor.Decrypt(this.privateKeyData.AsBuffer(), chosenPassword, chosenSalt).ToArray();
+            IBuffer decryptedData = Encryptor.Decrypt(this.privateKeyData.AsBuffer(), chosenPassword, chosenSalt);
 
             if (decryptedData == null || decryptedData.Length == 0)
             {
@@ -340,9 +286,10 @@ namespace BChipDesktop
             }
 
             byte[] parsedKeyData = new byte[expectedLength];
+            byte[] decryptedBytes = decryptedData.ToArray();
             for (int i = 0; i < parsedKeyData.Length; ++i)
             {
-                parsedKeyData[i] = decryptedData[i];
+                parsedKeyData[i] = decryptedBytes[i];
             }
 
             return parsedKeyData;
@@ -449,40 +396,32 @@ namespace BChipDesktop
 
             if (decryptedKey == null)
             {
-                // Decrypt fail
+                //Nothing to decrypt?
                 return "";
             }
 
-            try
+            string privateKey;
+            Key key = null;
+            switch (this.PkType)
             {
-                string privateKey;
-                Key key = null;
-                switch (this.PkType)
-                {
-                    case PKType.BTC:
-                        key = new Key(decryptedKey);
-                        privateKey = key.GetWif(Network.Main).ToWif();
-                        break;
-                    case PKType.BTC_TestNet:
-                        key = new Key(decryptedKey);
-                        privateKey = key.GetWif(Network.TestNet).ToWif();
-                        break;
-                    // Generic failsafe, no parsing/validation
-                    case PKType.UNSET:
-                    case PKType.ETH:
-                    case PKType.CUSTOM:
-                    default:
-                        privateKey = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, decryptedKey.AsBuffer());
-                        break;
-                }
+                case PKType.BTC:
+                    key = new Key(decryptedKey);
+                    privateKey = key.GetWif(Network.Main).ToWif();
+                    break;
+                case PKType.BTC_TestNet:
+                    key = new Key(decryptedKey);
+                    privateKey = key.GetWif(Network.TestNet).ToWif();
+                    break;
+                // Generic failsafe, no parsing/validation
+                case PKType.UNSET:
+                case PKType.ETH:
+                case PKType.CUSTOM:
+                default:
+                    privateKey = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, decryptedKey.AsBuffer());
+                    break;
+            }
 
-                return privateKey;
-            }
-            catch
-            {
-                // Exception on import
-                return null;
-            }
+            return privateKey;
         }
         
         public override string PublicAddress
