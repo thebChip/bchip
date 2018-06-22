@@ -100,7 +100,7 @@ namespace BChipDesktop
             dataToWrite.AddRange(bChip.privateKeyData);
             dataToWrite.AddRange(bChip.GetCardCheckSum());
 
-            if (dataToWrite.Count != 224)
+            if (dataToWrite.Count != 223)
             {
                 throw new Exception("BChip data to write exceeded card limit.");
             }

@@ -9,7 +9,7 @@
     <Grid>
         <StackPanel Name="InsertCardGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label Content="Please insert BChip into smart card reader" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" />
-            <Image HorizontalAlignment="Center" Height="96"  VerticalAlignment="Bottom" Width="100" Source="Assets/NotConnected-icon.PNG"/>
+            <Image HorizontalAlignment="Center" Height="96"  VerticalAlignment="Bottom" Width="100" Source="./Assets/NotConnected-icon.PNG"/>
         </StackPanel>
         <StackPanel Name="NonInitializedWizardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label 
@@ -21,18 +21,18 @@
                    HorizontalAlignment="Center"
                    />
             <ComboBox>
-                <Button Content="Bitcoin" Click="CreateBtcWallet_Click"/>
-                <Button Content="Bitcoin - Test Net" Click="CreateBtcTestnetWallet_Click"/>
-                <Button Content="Custom - no automatic validation" Click="CreateCustomButton_Click"/>
+                <ComboBoxItem Selected="CreateBtcWallet_Click" Content="Bitcoin (BTC)"/>
+                <ComboBoxItem Selected="CreateBtcTestnetWallet_Click" Content="Bitcoin - Test Net"/>
+                <ComboBoxItem Selected="CreateCustomButton_Click" Content="Custom - no automatic validation"/>
             </ComboBox>
         </StackPanel>
-        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="You must choose a secure passphrase. It is extremely important you never forget your passphrase - there is absolutely no recovery. Enter it twice." FontSize="14"
                    HorizontalAlignment="Center" Height="48" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
             <Grid>
-                <PasswordBox HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
-                <PasswordBox HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
+                <PasswordBox Name="passphrase" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
+                <PasswordBox Name="passphraseConfirmation" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
             </Grid>
             <TextBlock  Text="A default public / private key pair has been generated for you. You may replace the private key data with a seed phrase mnemonic." FontSize="14"
                    HorizontalAlignment="Center" Width="548" TextWrapping="Wrap" TextAlignment="Center"
@@ -42,18 +42,28 @@
                 <Label Content="Private Key Data (will be encrypted)" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
             </Grid>
             <Grid>
-                <TextBox Name="PublicKeyTextBox" MinLines="5" MaxLength="64" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
-                <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
+                <TextBox Name="PublicKeyTextBox" MinLines="5" MaxLength="64" TextWrapping="Wrap" 
+                         HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
+                <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" TextWrapping="Wrap" 
+                         HorizontalAlignment="Right" Width="200" Margin="0,0,50,0" TextInput="PrivateKeyTextBox_TextInput"/>
             </Grid>
-            <Button Name="ProvisionCardButton" Content="Provision bChip" Width="150" MinHeight="30"/>
-            <Label Name="CreateKeyErrorLabel" Content="" 
+            <Button Name="ProvisionCardButton" Content="Provision bChip" Width="150" MinHeight="30" 
+                    Click="ProvisionCardButton_Click"/>
+            <Grid>
+                <Label Name="CreateKeyErrorLabel" Content="" 
                    HorizontalAlignment="Center" VerticalAlignment="Bottom" 
                    FontSize="20" FontWeight="Bold" Foreground="#FFD10E0E"/>
+                <Label Name="CreatingKeyLabel" Content="" 
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                   FontSize="20" FontWeight="Bold" Foreground="#FF7DDC0B"/>
+            </Grid>
         </StackPanel>
-        <Grid Name="CrcErrorViewGrid" Visibility="Collapsed" VerticalAlignment="Center">
+        <StackPanel Name="CrcErrorViewGrid" Visibility="Collapsed" VerticalAlignment="Center">
             <Label Content="Card CRC validation failed. Try inserting it again?" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Margin="0,-49,0,0" Foreground="#FFD10E0E"/>
             <Image HorizontalAlignment="Center" Height="96" VerticalAlignment="Bottom" Width="100" Source="Assets/Sad-icon.PNG"/>
-        </Grid>
+            <Button Content="Erase Card" HorizontalAlignment="Center" Height="33" Width="108" 
+                    Click="FormatCard_Click" VerticalAlignment="Bottom" Margin="0,50,0,0" />
+        </StackPanel>
         <Grid Name="InitializedUnknownCardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label Content="Failed to read card, are you running the latest app?" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Margin="0,-49,0,0" Foreground="#FFD10E0E"/>
             <Image HorizontalAlignment="Center" Height="96" VerticalAlignment="Bottom" Width="100" Source="Assets/Sad-icon.PNG"/>

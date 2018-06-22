@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Windows.Security.Cryptography;
 
 namespace BChipDesktop
 {
@@ -125,11 +127,11 @@ namespace BChipDesktop
             ShowPassphraseDialog,
             Ready,
             ConfirmFormat,
-            // TODO
             NotInitialized,
             Error,
             CrcError,
             Unsupported,
+            ProvisionCard,
         }
         public void ChangePageUi(PageToShow pageToShow, BChipSmartCard bChipSmartCard)
         {
@@ -141,10 +143,13 @@ namespace BChipDesktop
             Visibility notInitializedWizardVisibility = Visibility.Collapsed;
             Visibility crcErrorViewGridVisibility = Visibility.Collapsed;
             Visibility unsupportedDialogVisibility = Visibility.Collapsed;
-
+            Visibility provisionNewKeysViewGridVisibility = Visibility.Collapsed;
 
             switch (pageToShow)
             {
+                case PageToShow.ProvisionCard:
+                    provisionNewKeysViewGridVisibility = Visibility.Visible;
+                    break;
                 case PageToShow.ConfirmFormat:
                     confirmFormatVisibility = Visibility.Visible;
                     break;
@@ -169,7 +174,12 @@ namespace BChipDesktop
                     break;
             }
 
-            InsertCardGrid.Dispatcher.BeginInvoke(new Action(() =>
+            ProvisionNewKeysViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ProvisionNewKeysViewGrid.Visibility = provisionNewKeysViewGridVisibility;
+            }));
+
+            NonInitializedWizardViewGrid.Dispatcher.BeginInvoke(new Action(() =>
             {
                 NonInitializedWizardViewGrid.Visibility = notInitializedWizardVisibility;
             }));
@@ -212,6 +222,7 @@ namespace BChipDesktop
                 // Populate for card UI
                 if (pageToShow == PageToShow.Ready)
                 {
+                    QrCodeImage.Visibility = Visibility.Hidden;
                     PubKeyCopyIcon.Visibility = Visibility.Hidden;
                     BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)bChipSmartCard.SmartCardData;
                     BChipIdLabel.Content = bchip.IdLabel;
@@ -239,6 +250,7 @@ namespace BChipDesktop
                                IntPtr.Zero,
                                Int32Rect.Empty,
                                BitmapSizeOptions.FromEmptyOptions());
+                        QrCodeImage.Visibility = Visibility.Visible;
                         PubKeyCopyIcon.Visibility = Visibility.Visible;
                         PublicKeyAddressLabel.Content = publicAddress;
                     }
@@ -379,7 +391,10 @@ namespace BChipDesktop
                                 WriteToLogFile("Card added had no data to download", "_monitor_CardInserted");
                             }
                         }
-                        catch { };
+                        catch (Exception ex)
+                        {
+                            WriteToLogFile($"Exception while loading card in {insertedCard.ReaderName} - {ex.Message} - {ex.StackTrace}", "ScanAndLoadConnectedCards");
+                        };
                     }
                 }
             }
@@ -619,6 +634,17 @@ namespace BChipDesktop
                             WriteToLogFile("FormatCard", writeResponse);
                         }
                     }
+
+                    using (var context = _contextFactory.Establish(SCardScope.System))
+                    {
+                        using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
+                        {
+                            // Validate format happened
+                            var formatResponse = isoReader.Transmit(AdpuHelper.FormatCard(CardType.BChip));
+                            WriteToLogFile("FormatResponse", formatResponse);
+                        }
+                    }
+
                     LoadedBChips = null;
                     ScanAndLoadConnectedCards();
                 }
@@ -643,7 +669,204 @@ namespace BChipDesktop
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-           var selection = e.AddedItems;
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ProvisionCardButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                CreateKeyErrorLabel.Content = "";
+                CreatingKeyLabel.Content = "";
+             
+                if (passphrase.Password.Length == 0 || passphraseConfirmation.Password.Length == 0)
+                {
+                    CreateKeyErrorLabel.Content = "A passphrase was not entered.";
+                    return;
+                }
+
+                if (passphrase.Password != passphraseConfirmation.Password)
+                {
+                    CreateKeyErrorLabel.Content = "Passphrases entered did not match.";
+                    return;
+                }
+
+                if (PrivateKeyTextBox.Text.Length == 0)
+                {
+                    CreateKeyErrorLabel.Content = "No private key data to store.";
+                    return;
+                }
+
+                if (CardPkType == PKType.BTC || CardPkType == PKType.BTC_TestNet)
+                {
+                    // Check if we are importing a user's wif or mnemonic, update public key field 
+                    // to allow the user to confirm
+                    if (CardGeneratedKey.GetBitcoinSecret(NBitcoin.Network.Main).ToWif() != PrivateKeyTextBox.Text)
+                    {
+                        try
+                        {
+                            NBitcoin.Key importedKey = null;
+                            int spacesDetected = PrivateKeyTextBox.Text.Count(a => a == ' ');
+                            // Check for mnemonic
+                            if (spacesDetected >= 12)
+                            {
+                                NBitcoin.Mnemonic mnemonic = new NBitcoin.Mnemonic(PrivateKeyTextBox.Text);
+                                importedKey = mnemonic.DeriveExtKey().PrivateKey;
+                            }
+                            else
+                            {
+                                // Check for wif
+                                importedKey = NBitcoin.Key.Parse(PrivateKeyTextBox.Text);
+                            }
+
+                            // Replace CardGeneratedKey with imported key. Only valid for bitcoin addresses.
+                            CardGeneratedKey = importedKey;
+                            PublicKeyTextBox.Text = importedKey.PubKey.GetAddress(Network).ToString();
+                            PrivateKeyTextBox.Text = importedKey.GetBitcoinSecret(Network).ToWif();
+                            CreatingKeyLabel.Content = "Key data imported, ready to provision bChip.";
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            CreateKeyErrorLabel.Content = "Failed to automatically parse private key data. Please verify mnenomic or wif.";
+                            return;
+                        }
+                    }
+                }
+
+                byte[] privateKeyToEncrypt = null;
+                byte[] publicKeyData = null;
+
+                if (CardGeneratedKey != null)
+                {
+                    // Users can optionally remove the public key portion, so we'll skip saving it.
+                    if (PublicKeyTextBox.Text.Length > 0)
+                    {
+                        publicKeyData = CardGeneratedKey.PubKey.ToBytes();
+                    }
+                    privateKeyToEncrypt = CardGeneratedKey.GetBitcoinSecret(Network).ToBytes();
+                }
+                else
+                {
+                    if (PublicKeyTextBox.Text.Length > 0)
+                    {
+                        publicKeyData = CryptographicBuffer.ConvertStringToBinary(PublicKeyTextBox.Text, BinaryStringEncoding.Utf8).ToArray();
+                    }
+
+                    privateKeyToEncrypt = CryptographicBuffer.ConvertStringToBinary(PrivateKeyTextBox.Text, BinaryStringEncoding.Utf8).ToArray();
+                }
+
+                if (privateKeyToEncrypt.Length > BChipMemoryLayout_BCHIP.PRIVATEKEY_MAX_DATA)
+                {
+                    CreateKeyErrorLabel.Content =
+                        $"Private key was {PrivateKeyTextBox.Text.Length} bytes, {Math.Abs(PrivateKeyTextBox.Text.Length - BChipMemoryLayout_BCHIP.PRIVATEKEY_MAX_DATA)} bytes over the limit.";
+                    return;
+                }
+
+                if (publicKeyData != null)
+                {
+                    if (publicKeyData.Length > BChipMemoryLayout_BCHIP.PUBKEY_MAX_DATA)
+                    {
+                        CreateKeyErrorLabel.Content =
+                            $"Public key was {PublicKeyTextBox.Text.Length} bytes, {Math.Abs(PublicKeyTextBox.Text.Length - BChipMemoryLayout_BCHIP.PUBKEY_MAX_DATA)} bytes over the limit.";
+                        return;
+                    }
+                }
+                
+                ProvisionNewKeysViewGrid.IsEnabled = false;
+                CreatingKeyLabel.Content = "Provisioning bChip! Do not remove card.";
+
+                // Encrypt data
+                BChipMemoryLayout_BCHIP bchip = LoadedBChips.SmartCardData as BChipMemoryLayout_BCHIP;
+                bchip.EncryptPrivateKeyData(CardPkType, passphrase.Password, privateKeyToEncrypt, publicKeyData);
+
+                using (var context = _contextFactory.Establish(SCardScope.System))
+                {
+                    using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
+                    {
+                        var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
+                        WriteToLogFile("CardUnblock", unlockResponse);
+                        if (unlockResponse.StatusWord != 0x00009000)
+                        {
+                            CreatingKeyLabel.Content = "";
+                            CreateKeyErrorLabel.Content = "Could not be unlock bchip for writing.";
+                            return;
+                        }
+                        var writeResponse = isoReader.Transmit(AdpuHelper.WriteCardData(bchip));
+                        WriteToLogFile("WriteCardData", writeResponse);
+                        if (unlockResponse.StatusWord != 0x00009000)
+                        {
+                            CreatingKeyLabel.Content = "";
+                            CreateKeyErrorLabel.Content = "Failure writing data to the bchip.";
+                            return;
+                        }
+                    }
+                }
+                // Done? clear loaded card, reload card
+                LoadedBChips = null;
+                ScanAndLoadConnectedCards();
+            }
+            finally
+            {
+                ProvisionNewKeysViewGrid.IsEnabled = true;
+            }
+        }
+        
+        public PKType CardPkType { get; private set; }
+        private NBitcoin.Key CardGeneratedKey { get; set; }
+        private NBitcoin.Network Network { get; set; }
+        private void SetupProvisioningWindow(PKType pKType)
+        {
+            CardPkType = pKType;
+            CardGeneratedKey = new NBitcoin.Key();
+
+            switch (pKType)
+            {
+                case PKType.BTC:
+                    Network = NBitcoin.Network.Main;
+                    break;
+                case PKType.BTC_TestNet:
+                    Network = NBitcoin.Network.TestNet;
+                    break;
+                case PKType.CUSTOM:
+                    CardGeneratedKey = null;
+                    Network = null;
+                    break;
+            }
+
+            if (CardGeneratedKey != null)
+            {
+                PublicKeyTextBox.Text = CardGeneratedKey.PubKey.GetAddress(Network).ToString();
+                PrivateKeyTextBox.Text = CardGeneratedKey.GetBitcoinSecret(Network).ToWif();
+            }
+        }
+
+        private void CreateBtcWallet_Click(object sender, RoutedEventArgs e)
+        {
+            SetupProvisioningWindow(PKType.BTC);
+            ChangePageUi(PageToShow.ProvisionCard, LoadedBChips);
+        }
+
+        private void CreateBtcTestnetWallet_Click(object sender, RoutedEventArgs e)
+        {
+            SetupProvisioningWindow(PKType.BTC_TestNet);
+            ChangePageUi(PageToShow.ProvisionCard, LoadedBChips);
+        }
+
+        private void CreateCustomButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetupProvisioningWindow(PKType.CUSTOM);
+            ChangePageUi(PageToShow.ProvisionCard, LoadedBChips);
+        }
+
+        private void PrivateKeyTextBox_TextInput(object sender, TextCompositionEventArgs e)
+        {
+            // TODO: We'll eventually shuffle raw memory around each keystroke. This incldues hid for fun.
         }
     }
 }
