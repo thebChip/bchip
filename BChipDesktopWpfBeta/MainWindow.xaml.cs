@@ -296,7 +296,7 @@ namespace BChipDesktop
             }
             catch (Exception ex)
             {
-                WriteToLogFile($"Exception caught when analyzing card: {0} - {1}", "AnalyzeCardData");
+                WriteToLogFile($"Exception caught when analyzing card: {ex.Message} - {ex.StackTrace}", "AnalyzeCardData");
             }
 
             return PageToShow.Error;
@@ -725,7 +725,8 @@ namespace BChipDesktop
                         }
                         catch (Exception ex)
                         {
-                            CreateKeyErrorLabel.Content = "Failed to automatically parse private key data. Please verify mnenomic or wif.";
+                            WriteToLogFile($"Exception hit: {ex.Message} - {ex.StackTrace}", "ProvisionCardButton_Click");
+                            CreateKeyErrorLabel.Content = "Failed to automatically parse private key data.";
                             return;
                         }
                     }

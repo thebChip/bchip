@@ -1,0 +1,3 @@
+Binary deployments have been moved. 
+
+x64\LKG: https://bchipsite9825.blob.core.windows.net/binaries/x64/LKG/BChipDesktopBeta.exe
