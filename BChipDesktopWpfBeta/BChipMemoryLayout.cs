@@ -39,6 +39,13 @@ namespace BChipDesktop
                 throw new Exception("Card ID should be 7 bytes.");
             }
 
+            // Incase the mlvi was not pre-initialized, let's create one
+            if (cardId.Count(a => a == 0xFF) >= 6)
+            {
+                cardId = new byte[7];
+                RandomNumberGenerator.Create().GetBytes(cardId);
+            }
+
             this.cardType = cardType;
             this.mlvi = new byte[8];
             this.mlvi[0] = (byte)cardType;
@@ -53,6 +60,13 @@ namespace BChipDesktop
             if (mlvi == null || mlvi.Length != 8)
             {
                 throw new Exception("MLVI should be 8 bytes.");
+            }
+
+            // Incase the mlvi was not pre-initialized, let's create one
+            if (mlvi.Count(a=>a == 0xFF) >= 7)
+            {
+                mlvi = new byte[8];
+                RandomNumberGenerator.Create().GetBytes(mlvi);
             }
 
             this.cardType = (CardType)mlvi[0];

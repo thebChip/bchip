@@ -13,14 +13,14 @@
         </StackPanel>
         <StackPanel Name="NonInitializedWizardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label 
-                   Content="This bChip is ready to be initialized." FontSize="14"
+                   Content="This bChip is ready to be setup." FontSize="14"
                    HorizontalAlignment="left"
                    />
             <Label  
-                   Content="Chose the type of private key you want to provision on this card" FontSize="14"
+                   Content="Chose the type of private key you want to setup on this card" FontSize="14"
                    HorizontalAlignment="Center"
                    />
-            <ComboBox>
+            <ComboBox Name="WalletTypeComboBox">
                 <ComboBoxItem Selected="CreateBtcWallet_Click" Content="Bitcoin (BTC)"/>
                 <ComboBoxItem Selected="CreateBtcTestnetWallet_Click" Content="Bitcoin - Test Net"/>
                 <ComboBoxItem Selected="CreateCustomButton_Click" Content="Custom - no automatic validation"/>
@@ -34,7 +34,9 @@
                 <PasswordBox Name="passphrase" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
                 <PasswordBox Name="passphraseConfirmation" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
             </Grid>
-            <TextBlock  Text="A default public / private key pair has been generated for you. You may replace the private key data with a seed phrase mnemonic." FontSize="14"
+            <TextBlock 
+                Name="HelperText"
+                Text="When setting up a Bitcoin address, a private key is automatically generated for you. You may replace the private key data with a seed phrase mnemonic or your own WIF address." FontSize="14"
                    HorizontalAlignment="Center" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
             <Grid>
@@ -47,8 +49,9 @@
                 <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" TextWrapping="Wrap" 
                          HorizontalAlignment="Right" Width="200" Margin="0,0,50,0" TextInput="PrivateKeyTextBox_TextInput"/>
             </Grid>
-            <Button Name="ProvisionCardButton" Content="Provision bChip" Width="150" MinHeight="30" 
+            <Button Name="ProvisionCardButton" Content="Setup bChip" Width="150" MinHeight="30" 
                     Click="ProvisionCardButton_Click"/>
+            <Button Content="Cancel" Height="33" Width="121" Click="ClearCancelButton_Click"/>
             <Grid>
                 <Label Name="CreateKeyErrorLabel" Content="" 
                    HorizontalAlignment="Center" VerticalAlignment="Bottom" 
