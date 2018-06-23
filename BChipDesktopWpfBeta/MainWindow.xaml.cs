@@ -1,4 +1,5 @@
-﻿using PCSC;
+﻿using NBitcoin;
+using PCSC;
 using PCSC.Iso7816;
 using PCSC.Monitoring;
 using System;
@@ -572,7 +573,7 @@ namespace BChipDesktop
                 string pk = bchip.DecryptedPrivateKeyString(PassphraseEntryBox.Password);
 
                 PrivateKeyAddressLabel.Content = pk;
-                QrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
+                PrivateQrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
                    new QrHandler(pk, 5).GetQrCode().GetHbitmap(),
                    IntPtr.Zero,
                    Int32Rect.Empty,
@@ -582,13 +583,18 @@ namespace BChipDesktop
             }
             catch (Exception ex)
             {
+                WriteToLogFile($"Exception hit decrypting card data: {ex.Message} - {ex.StackTrace}");
                 ShowPassphraseViewGrid.Visibility = Visibility.Visible;
-                ErrorMessageLabel.Content = "Exception hit - passphrase?";
+                ErrorMessageLabel.Content = "Failed to decrypt private key. Was the passphrase correct?";
             }
         }
 
         private void ClearCancelButton_Click(object sender, RoutedEventArgs e)
         {
+            if (PrivateQrCodeImage.Source != null)
+            {
+                PrivateQrCodeImage.Source = null;
+            }
             ShowPrivateKeyViewGrid.Visibility = Visibility.Collapsed;
             ConfirmFormatViewGrid.Visibility = Visibility.Collapsed;
             if (LoadedBChips != null)
@@ -619,11 +625,9 @@ namespace BChipDesktop
             {
                 try
                 {
-                    var res = FormatingViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        FormatingViewGrid.Visibility = Visibility.Visible;
-                    }));
-
+                    ConfirmFormatViewGrid.Visibility = Visibility.Collapsed;
+                    FormatingViewGrid.Visibility = Visibility.Visible;
+                    
                     using (var context = _contextFactory.Establish(SCardScope.System))
                     {
                         using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
@@ -635,31 +639,18 @@ namespace BChipDesktop
                         }
                     }
 
-                    using (var context = _contextFactory.Establish(SCardScope.System))
-                    {
-                        using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
-                        {
-                            // Validate format happened
-                            var formatResponse = isoReader.Transmit(AdpuHelper.FormatCard(CardType.BChip));
-                            WriteToLogFile("FormatResponse", formatResponse);
-                        }
-                    }
-
                     LoadedBChips = null;
                     ScanAndLoadConnectedCards();
                 }
                 catch (Exception ex)
-                { }
+                {
+                    WriteToLogFile($"Unhandled exception formatting card: {ex.Message} - {ex.StackTrace}");
+                }
                 finally
                 {
-                    var res = FormatingViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        FormatingViewGrid.Visibility = Visibility.Collapsed;
-                    }));
+                    FormatingViewGrid.Visibility = Visibility.Collapsed;
                 }
             }
-
-            ClearCancelButton_Click(sender, e);
         }
 
         private void FormatCard_Click(object sender, RoutedEventArgs e)
@@ -713,10 +704,11 @@ namespace BChipDesktop
                             NBitcoin.Key importedKey = null;
                             int spacesDetected = PrivateKeyTextBox.Text.Count(a => a == ' ');
                             // Check for mnemonic
-                            if (spacesDetected >= 12)
+                            if (spacesDetected >= 11)
                             {
                                 NBitcoin.Mnemonic mnemonic = new NBitcoin.Mnemonic(PrivateKeyTextBox.Text);
-                                importedKey = mnemonic.DeriveExtKey().PrivateKey;
+                                // Force bitcoin and first address
+                                importedKey = mnemonic.DeriveExtKey().Derive(KeyPath.Parse("m/44'/0'/0'/0/0")).PrivateKey;
                             }
                             else
                             {
@@ -749,7 +741,16 @@ namespace BChipDesktop
                     {
                         publicKeyData = CardGeneratedKey.PubKey.ToBytes();
                     }
-                    privateKeyToEncrypt = CardGeneratedKey.GetBitcoinSecret(Network).ToBytes();
+                    byte[] privateKeyBytes = CardGeneratedKey.GetWif(Network.Main).ToBytes();
+                    // Always seem to get an extra bit at the end...
+                    if (privateKeyBytes.Length == 33 && privateKeyBytes[32] == 0x1)
+                    {
+                        privateKeyToEncrypt = privateKeyBytes.Take(32).ToArray();
+                    }
+                    else
+                    {
+                        privateKeyToEncrypt = privateKeyBytes;
+                    }
                 }
                 else
                 {
