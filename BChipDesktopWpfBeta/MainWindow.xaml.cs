@@ -287,7 +287,10 @@ namespace BChipDesktop
 
                 if (cardMemory.IsFormatted)
                 {
-                    WalletTypeComboBox.SelectedItem = null;
+                    WalletTypeComboBox.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        WalletTypeComboBox.SelectedItem = null;
+                    }));
                     return PageToShow.NotInitialized;
                 }
 
@@ -650,7 +653,6 @@ namespace BChipDesktop
                 }
 
                 LoadedBChips = null;
-                ScanAndLoadConnectedCards();
             }
             catch (Exception ex)
             {
@@ -659,6 +661,7 @@ namespace BChipDesktop
             finally
             {
                 DispatcherUpdater(FormatingViewGrid, Visibility.Collapsed);
+                ScanAndLoadConnectedCards();
             }
         }
 
