@@ -80,9 +80,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BChipDesktop\BChipDesktopBeta.csproj">
-      <Project>{03486f36-f749-4161-8356-98eebf8283ff}</Project>
-      <Name>BChipDesktopBeta</Name>
+    <ProjectReference Include="..\BChipDesktopWpfBeta\BChipDesktopWpfBeta.csproj">
+      <Project>{8d4eca2c-fab8-4325-ba69-faea97d87a60}</Project>
+      <Name>BChipDesktopWpfBeta</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

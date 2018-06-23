@@ -1,0 +1,367 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PCSC.Reactive</name>
+    </assembly>
+    <members>
+        <member name="T:PCSC.Reactive.DeviceMonitorExt">
+            <summary>
+            Device monitor extension methods
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.DeviceMonitorExt.ObserveEvents(PCSC.Monitoring.IDeviceMonitor,System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Listen to all device events of a given <see cref="T:PCSC.Monitoring.IDeviceMonitor"/>.
+            </summary>
+            <param name="monitor">The device monitor to listen on.</param>
+            <param name="scheduler">The scheduler to run the add and remove event handler logic on.</param>
+            <returns>An observable of reader attached/detached events.</returns>
+        </member>
+        <member name="T:PCSC.Reactive.DeviceMonitorFactoryExt">
+            <summary>
+            Extension methods for <see cref="T:PCSC.Monitoring.IDeviceMonitorFactory"/>
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.DeviceMonitorFactoryExt.CreateObservable(PCSC.Monitoring.IDeviceMonitorFactory,PCSC.SCardScope,System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Creates an observable for smartcard reader device events.
+            </summary>
+            <param name="factory">Factory to use for <see cref="T:PCSC.Monitoring.IDeviceMonitor"/> creation.</param>
+            <param name="scope">Scope of the establishment. This can either be a local or remote connection.</param>
+            <param name="scheduler">The scheduler to run the add and remove event handler logic on.</param>
+            <returns></returns>
+        </member>
+        <member name="T:PCSC.Reactive.Events.CardInserted">
+            <summary>
+            A new card has been inserted
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.CardInserted.#ctor(System.String,System.Byte[],PCSC.SCRState)">
+            <summary>
+            Creates an CardInserted instance
+            </summary>
+            <param name="readerName">Name of the reader</param>
+            <param name="atr">The card's ATR</param>
+            <param name="state">The reader's state</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.CardRemoved">
+            <summary>
+            A card has been removed
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.CardRemoved.#ctor(System.String,System.Byte[],PCSC.SCRState)">
+            <summary>
+            Creates a new CardRemoved instance
+            </summary>
+            <param name="readerName">Name of the smard card reader</param>
+            <param name="atr">The card's ATR</param>
+            <param name="state">The reader's state</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.CardStatusChanged">
+            <summary>Information about a smart card reader status change.</summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.CardStatusChanged.NewState">
+            <summary>The new status of this reader.</summary>
+            <remarks>
+                <para>Is a bit mask containing one or more of the following values:</para>
+                <list type="table">
+                    <listheader><term>State</term><description>Description</description></listheader>
+                    <item><term><see cref="F:PCSC.SCRState.Unaware" /></term><description>The application is unaware of the current state, and would like to know. The use of this value results in an immediate return from state transition monitoring services. This is represented by all bits set to zero.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Ignore" /></term><description>This reader should be ignored</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Changed" /></term><description>There is a difference between the state believed by the application, and the state known by the resource manager. When this bit is set, the application may assume a significant state change has occurred on this reader.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Unknown" /></term><description>The given reader name is not recognized by the resource manager. If this bit is set, then <see cref="F:PCSC.SCRState.Changed" /> and <see cref="F:PCSC.SCRState.Ignore" /> will also be set</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Unavailable" /></term><description>The actual state of this reader is not available. If this bit is set, then all the following bits are clear.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Empty" /></term><description>There is no card in the reader. If this bit is set, all the following bits will be clear</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Present" /></term><description>There is a card in the reader</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Exclusive" /></term><description>The card in the reader is allocated for exclusive use by another application. If this bit is set, <see cref="F:PCSC.SCRState.Present" /> will also be set.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.InUse" /></term><description>The card in the reader is in use by one or more other applications, but may be connected to in shared mode. If this bit is set, <see cref="F:PCSC.SCRState.Present" /> will also be set.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Mute" /></term><description>There is an unresponsive card in the reader.</description></item>
+                </list>
+            </remarks>
+        </member>
+        <member name="P:PCSC.Reactive.Events.CardStatusChanged.PreviousState">
+            <summary>The reader's status before this event.</summary>
+            <remarks>
+                <para>Is a bit mask containing one or more of the following values:</para>
+                <list type="table">
+                    <listheader><term>State</term><description>Description</description></listheader>
+                    <item><term><see cref="F:PCSC.SCRState.Unaware" /></term><description>The application is unaware of the current state, and would like to know. The use of this value results in an immediate return from state transition monitoring services. This is represented by all bits set to zero.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Ignore" /></term><description>This reader should be ignored</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Changed" /></term><description>There is a difference between the state believed by the application, and the state known by the resource manager. When this bit is set, the application may assume a significant state change has occurred on this reader.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Unknown" /></term><description>The given reader name is not recognized by the resource manager. If this bit is set, then <see cref="F:PCSC.SCRState.Changed" /> and <see cref="F:PCSC.SCRState.Ignore" /> will also be set</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Unavailable" /></term><description>The actual state of this reader is not available. If this bit is set, then all the following bits are clear.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Empty" /></term><description>There is no card in the reader. If this bit is set, all the following bits will be clear</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Present" /></term><description>There is a card in the reader</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Exclusive" /></term><description>The card in the reader is allocated for exclusive use by another application. If this bit is set, <see cref="F:PCSC.SCRState.Present" /> will also be set.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.InUse" /></term><description>The card in the reader is in use by one or more other applications, but may be connected to in shared mode. If this bit is set, <see cref="F:PCSC.SCRState.Present" /> will also be set.</description></item>
+                    <item><term><see cref="F:PCSC.SCRState.Mute" /></term><description>There is an unresponsive card in the reader.</description></item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:PCSC.Reactive.Events.CardStatusChanged.#ctor(System.String,System.Byte[],PCSC.SCRState,PCSC.SCRState)">
+            <summary>
+            Creates a new CardStatusChanged instance
+            </summary>
+            <param name="readerName">Name of the reader</param>
+            <param name="atr">The card's ATR</param>
+            <param name="previousState">The previous state</param>
+            <param name="newState">The new state</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.DeviceMonitorEvent">
+            <summary>
+            Device monitor event
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.DeviceMonitorEvent.Readers">
+            <summary>
+            A list of affected smartcard reader names
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.DeviceMonitorEvent.EventArgs">
+            <summary>
+            Original event arguments
+            </summary>
+        </member>
+        <member name="T:PCSC.Reactive.Events.DeviceMonitorInitialized">
+            <summary>
+            The device monitor has been initialized
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.DeviceMonitorInitialized.Readers">
+            <summary>
+            Currently attached readers
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.DeviceMonitorInitialized.EventArgs">
+            <summary>
+            Original event arguments
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.DeviceMonitorInitialized.#ctor(PCSC.Monitoring.DeviceChangeEventArgs)">
+            <summary>
+            Creates a new instance
+            </summary>
+            <param name="e">Original event args</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.MonitorCardInfoEvent">
+            <summary>
+            Reader status changed
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.MonitorCardInfoEvent.State">
+            <summary>The current reader status.</summary>
+            <remarks>
+                <para>
+                    Is a bit mask containing one or more of the following values:
+                </para>
+                <list type="table">
+                    <listheader>
+                        <term>State</term>
+                        <description>Description</description>
+                    </listheader>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Unaware" />
+                        </term>
+                        <description>The application is unaware of the current state, and would like to know. The use of this value results in an immediate return from state transition monitoring services. This is represented by all bits set to zero.</description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Ignore" />
+                        </term>
+                        <description>This reader should be ignored</description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Changed" />
+                        </term>
+                        <description>There is a difference between the state believed by the application, and the state known by the resource manager. When this bit is set, the application may assume a significant state change has occurred on this reader.</description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Unknown" />
+                        </term>
+                        <description>
+                            The given reader name is not recognized by the resource manager. If this bit is set, then
+                            <see
+                                cref="F:PCSC.SCRState.Changed" />
+                            and
+                            <see
+                                cref="F:PCSC.SCRState.Ignore" />
+                            will also be set
+                        </description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Unavailable" />
+                        </term>
+                        <description>The actual state of this reader is not available. If this bit is set, then all the following bits are clear.</description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Empty" />
+                        </term>
+                        <description>There is no card in the reader. If this bit is set, all the following bits will be clear</description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Present" />
+                        </term>
+                        <description>There is a card in the reader</description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Exclusive" />
+                        </term>
+                        <description>
+                            The card in the reader is allocated for exclusive use by another application. If this bit is set,
+                            <see
+                                cref="F:PCSC.SCRState.Present" />
+                            will also be set.
+                        </description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.InUse" />
+                        </term>
+                        <description>
+                            The card in the reader is in use by one or more other applications, but may be connected to in shared mode. If this bit is set,
+                            <see
+                                cref="F:PCSC.SCRState.Present" />
+                            will also be set.
+                        </description>
+                    </item>
+                    <item>
+                        <term>
+                            <see cref="F:PCSC.SCRState.Mute" />
+                        </term>
+                        <description>There is an unresponsive card in the reader.</description>
+                    </item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:PCSC.Reactive.Events.MonitorCardInfoEvent.#ctor(System.String,System.Byte[],PCSC.SCRState)">
+            <summary>
+            Creates a new MonitorCardInfoEvent instance
+            </summary>
+            <param name="readerName">Name of the smard card reader</param>
+            <param name="atr">The card's ATR</param>
+            <param name="state">The reader's state</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.MonitorEvent">
+            <summary>
+            Smart card monitor event
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.MonitorEvent.ReaderName">
+            <summary>
+            Name of the smard card reader
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.MonitorEvent.Atr">
+            <summary>
+            The card's ATR
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.MonitorEvent.#ctor(System.String,System.Byte[])">
+            <summary>
+            Creates a new monitor event instance
+            </summary>
+            <param name="readerName">Name of the smard card reader</param>
+            <param name="atr">The card's ATR</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.MonitorInitialized">
+            <summary>
+            The smart card monitor has been initialized
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.MonitorInitialized.#ctor(System.String,System.Byte[],PCSC.SCRState)">
+            <summary>
+            Creates a new MonitorInitialized instance 
+            </summary>
+            <param name="readerName">Name of the smard card reader</param>
+            <param name="atr">The card's ATR</param>
+            <param name="state">The reader's state</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.ReadersAttached">
+            <summary>
+            Smartcard reader devices have been attached
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.ReadersAttached.Readers">
+            <summary>
+            Recently attached readers
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.ReadersAttached.EventArgs">
+            <summary>
+            Original event arguments
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.ReadersAttached.#ctor(PCSC.Monitoring.DeviceChangeEventArgs)">
+            <summary>
+            Creates a new instance
+            </summary>
+            <param name="e">Original event arguments</param>
+        </member>
+        <member name="T:PCSC.Reactive.Events.ReadersDetached">
+            <summary>
+            Smartcard reader devices have been detached
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.ReadersDetached.Readers">
+            <summary>
+            Recently detached readers
+            </summary>
+        </member>
+        <member name="P:PCSC.Reactive.Events.ReadersDetached.EventArgs">
+            <summary>
+            Original event arguments
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.Events.ReadersDetached.#ctor(PCSC.Monitoring.DeviceChangeEventArgs)">
+            <summary>
+            Creates a new instance
+            </summary>
+            <param name="e">Original event arguments</param>
+        </member>
+        <member name="T:PCSC.Reactive.MonitorFactoryExt">
+            <summary>
+            Extension methods for <see cref="T:PCSC.Monitoring.IMonitorFactory"/>
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.MonitorFactoryExt.CreateObservable(PCSC.Monitoring.IMonitorFactory,PCSC.SCardScope,System.String,System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Creates an observable for smart card events.
+            </summary>
+            <param name="factory">Factory to use for <see cref="T:PCSC.Monitoring.ISCardMonitor"/> creation.</param>
+            <param name="scope">Scope of the establishment. This can either be a local or remote connection.</param>
+            <param name="readerName">Name of the smart card reader that shall be monitored.</param>
+            <param name="scheduler">The scheduler to run the add and remove event handler logic on.</param>
+            <returns></returns>
+        </member>
+        <member name="M:PCSC.Reactive.MonitorFactoryExt.CreateObservable(PCSC.Monitoring.IMonitorFactory,PCSC.SCardScope,System.Collections.Generic.IEnumerable{System.String},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Creates an observable for smart card events.
+            </summary>
+            <param name="factory">Factory to use for <see cref="T:PCSC.Monitoring.ISCardMonitor"/> creation.</param>
+            <param name="scope">Scope of the establishment. This can either be a local or remote connection.</param>
+            <param name="readerNames">Name of the smart card reader that shall be monitored.</param>
+            <param name="scheduler">The scheduler to run the add and remove event handler logic on.</param>
+            <returns></returns>
+        </member>
+        <member name="T:PCSC.Reactive.SCardMonitorExt">
+            <summary>
+            Smart card monitor extension methods
+            </summary>
+        </member>
+        <member name="M:PCSC.Reactive.SCardMonitorExt.ObserveEvents(PCSC.Monitoring.ISCardMonitor,System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Listen to all smart card events of a given <see cref="T:PCSC.Monitoring.ISCardMonitor"/>.
+            </summary>
+            <param name="monitor">The smart card monitor to listen on.</param>
+            <param name="scheduler">The scheduler to run the add and remove event handler logic on.</param>
+            <returns>An observable of all smart card events.</returns>
+        </member>
+    </members>
+</doc>
