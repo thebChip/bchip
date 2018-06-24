@@ -5,6 +5,7 @@ using PCSC.Monitoring;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -24,6 +25,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Windows.Security.Cryptography;
+using SimpleLogger;
+using SimpleLogger.Logging.Handlers;
 
 namespace BChipDesktop
 {
@@ -32,7 +35,7 @@ namespace BChipDesktop
     /// </summary>
     public partial class MainWindow : Window
     {
-        public StreamWriter logWriter = null;
+        private static string LogFilename = $"{DateTime.Now.ToString("yyyy-MM-dd")}-BChip.log";
         private static readonly IContextFactory _contextFactory = ContextFactory.Instance;
         private ISCardMonitor _monitor = MonitorFactory.Instance.Create(SCardScope.System);
 
@@ -41,42 +44,32 @@ namespace BChipDesktop
 
         public MainWindow()
         {
-            using (logWriter = File.AppendText(
-               $"{DateTime.Now.ToString("yyyy-MM-dd")}-BChip.log"))
+            Logger.LoggerHandlerManager.AddHandler(new FileLoggerHandler(LogFilename));
+            Logger.Log("App Launched");
+
+            try
             {
-                try
-                {
-                    WriteToLogFile($"App started", "Startup");
+                StartMonitoring();
 
-                    StartMonitoring();
+                InitializeComponent();
 
-                    //WriteToLogFile($"Load cards on disk", "Startup");
+                // Check for plugged in cards
+                ScanAndLoadConnectedCards();
 
-                    InitializeComponent();
-                    
-                    // Check for plugged in cards
-                    ScanAndLoadConnectedCards();
+                // Memory walker timer, which we'll ideally want to use to annoy any potential
+                // binaries that are sniffing the users memory. Ideally, this will also mess with hid
+                // messages in the future (via admin)
+                //WriteToLogFile($"Timer started", "Startup");
+                //passphraseClearTimer = new System.Threading.Timer(
+                // _ =>
+                // {
 
-                    // Memory walker timer, which we'll ideally want to use to annoy any potential
-                    // binaries that are sniffing the users memory. Ideally, this will also mess with hid
-                    // messages in the future (via admin)
-                    //WriteToLogFile($"Timer started", "Startup");
-                    //passphraseClearTimer = new System.Threading.Timer(
-                    // _ =>
-                    // {
-                         
-                    // }
-                    //, null, 1000, 1000);
-
-                }
-                catch (Exception ex)
-                {
-                    WriteToLogFile($"Exception caught on startup: {ex.Message} - {ex.StackTrace}", "Startup");
-                }
-                finally
-                {
-                    
-                }
+                // }
+                //, null, 1000, 1000);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
         }
         
@@ -102,7 +95,7 @@ namespace BChipDesktop
                 }
                 catch (Exception ex)
                 {
-                    WriteToLogFile($"Exception caught: {ex.Message} - {ex.StackTrace}", "_monitor_CardInserted");
+                    Logger.Log(ex);
                 }
                 
             }
@@ -140,15 +133,18 @@ namespace BChipDesktop
             Visibility readyVisibility = Visibility.Collapsed;
             Visibility confirmFormatVisibility = Visibility.Collapsed;
             Visibility passphraseDialogVisibility = Visibility.Collapsed;
-
             Visibility notInitializedWizardVisibility = Visibility.Collapsed;
             Visibility crcErrorViewGridVisibility = Visibility.Collapsed;
             Visibility unsupportedDialogVisibility = Visibility.Collapsed;
             Visibility provisionNewKeysViewGridVisibility = Visibility.Collapsed;
+            Visibility showPrivateKeyViewGridVisibility = Visibility.Collapsed;
 
             ClearPasswordBox(PassphraseEntryBox);
             ClearPasswordBox(passphrase);
             ClearPasswordBox(passphraseConfirmation);
+            
+            // Clear last error if set
+            UpdateTextLabel(ErrorMessageLabel, "");
 
             switch (pageToShow)
             {
@@ -179,93 +175,103 @@ namespace BChipDesktop
                     break;
             }
 
-            ProvisionNewKeysViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            DispatcherUpdater(ShowPrivateKeyViewGrid, showPrivateKeyViewGridVisibility);
+            DispatcherUpdater(ProvisionNewKeysViewGrid, provisionNewKeysViewGridVisibility);
+            DispatcherUpdater(NonInitializedWizardViewGrid, notInitializedWizardVisibility);
+            DispatcherUpdater(CrcErrorViewGrid, crcErrorViewGridVisibility);
+            DispatcherUpdater(InitializedUnknownCardViewGrid, unsupportedDialogVisibility);
+            DispatcherUpdater(ShowPassphraseViewGrid, passphraseDialogVisibility);
+            DispatcherUpdater(InsertCardGrid, noCardVisibility);
+            DispatcherUpdater(ConfirmFormatViewGrid, confirmFormatVisibility);
+            DispatcherUpdater(ReadyCardViewGrid, readyVisibility);
+            
+            if (pageToShow == PageToShow.NoCard)
             {
-                ProvisionNewKeysViewGrid.Visibility = provisionNewKeysViewGridVisibility;
-            }));
-
-            NonInitializedWizardViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                NonInitializedWizardViewGrid.Visibility = notInitializedWizardVisibility;
-            }));
-
-            CrcErrorViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                CrcErrorViewGrid.Visibility = crcErrorViewGridVisibility;
-            }));
-
-            InitializedUnknownCardViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                InitializedUnknownCardViewGrid.Visibility = unsupportedDialogVisibility;
-            }));
-
-            ShowPassphraseViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                ShowPassphraseViewGrid.Visibility = passphraseDialogVisibility;
-
-                if (pageToShow == PageToShow.ShowPassphraseDialog)
+                // Clear any keys left in UI pages
+                UpdateTextLabel(PrivateKeyAddressLabel, "");
+                PrivateQrCodeImage.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    // Clear last error if set
-                    ErrorMessageLabel.Content = "";
-                }
-            }));
-
-            InsertCardGrid.Dispatcher.BeginInvoke(new Action(() =>
+                    PrivateQrCodeImage.Source = null;
+                }));
+            }
+            
+            // Populate for card UI
+            if (pageToShow == PageToShow.Ready)
             {
-                InsertCardGrid.Visibility = noCardVisibility;
-            }));
-
-            ConfirmFormatViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                ConfirmFormatViewGrid.Visibility = confirmFormatVisibility;
-            }));
-
-            ReadyCardViewGrid.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                ReadyCardViewGrid.Visibility = readyVisibility;
-
-                // Populate for card UI
-                if (pageToShow == PageToShow.Ready)
+                QrCodeImage.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     QrCodeImage.Visibility = Visibility.Hidden;
+                }));
+                PubKeyCopyIcon.Dispatcher.BeginInvoke(new Action(() =>
+                {
                     PubKeyCopyIcon.Visibility = Visibility.Hidden;
-                    BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)bChipSmartCard.SmartCardData;
-                    BChipIdLabel.Content = bchip.IdLabel;
-                    string publicAddress = bchip.PublicAddress;
-                    if (publicAddress == "")
+                }));
+                
+                BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)bChipSmartCard.SmartCardData;
+                UpdateTextLabel(BChipIdLabel, bchip.IdLabel);
+                switch (bchip.PkType)
+                {
+                    case PKType.BTC:
+                        UpdateTextLabel(PKTypeLabel, "Bitcoin (BTC)");
+                        break;
+                    case PKType.BTC_TestNet:
+                        UpdateTextLabel(PKTypeLabel, "Bitcoin (TestNet)");
+                        break;
+                    case PKType.CUSTOM:
+                        UpdateTextLabel(PKTypeLabel, "Custom");
+                        break;
+                    case PKType.UNSET:
+                        UpdateTextLabel(PKTypeLabel, "(no key data)");
+                        break;
+                }
+
+                string publicAddress = bchip.PublicAddress;
+                if (publicAddress == "")
+                {
+                    if (bchip.PkType == PKType.UNSET)
                     {
-                        if (bchip.PkType == PKType.UNSET)
+                        UpdateTextLabel(PublicKeyAddressLabel, "Card not setup - remove and re-insert card to reload");
+                        DisplayPrivateKeyButton.Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            PublicKeyAddressLabel.Content = "Card not setup - remove and re-insert card to reload";
                             DisplayPrivateKeyButton.IsEnabled = false;
-                        } 
-                        else
-                        {
-                            PublicKeyAddressLabel.Content = "No public key data on card";
-                        }
-                    }
-                    else if (publicAddress == null)
-                    {
-                        PublicKeyAddressLabel.Content = "Failed to parse public key data";
+                        }));
                     }
                     else
                     {
-                        QrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
-                               new QrHandler(publicAddress, 5).GetQrCode().GetHbitmap(),
-                               IntPtr.Zero,
-                               Int32Rect.Empty,
-                               BitmapSizeOptions.FromEmptyOptions());
-                        QrCodeImage.Visibility = Visibility.Visible;
-                        PubKeyCopyIcon.Visibility = Visibility.Visible;
-                        PublicKeyAddressLabel.Content = publicAddress;
-                    }
-
-                    if (bchip.PkType != PKType.UNSET)
-                    {
-                        DisplayPrivateKeyButton.IsEnabled = true;
+                        UpdateTextLabel(PublicKeyAddressLabel, "No public key data on card");
                     }
                 }
-            }));
+                else if (publicAddress == null)
+                {
+                    UpdateTextLabel(PublicKeyAddressLabel, "Failed to parse public key data");
+                }
+                else
+                {
+                    QrCodeImage.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        QrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
+                           new QrHandler(publicAddress, 5).GetQrCode().GetHbitmap(),
+                           IntPtr.Zero,
+                           Int32Rect.Empty,
+                           BitmapSizeOptions.FromEmptyOptions());
+                        QrCodeImage.Visibility = Visibility.Visible;
+                    }));
+                    PubKeyCopyIcon.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        PubKeyCopyIcon.Visibility = Visibility.Visible;
+                    }));
+
+                    UpdateTextLabel(PublicKeyAddressLabel, publicAddress);
+                }
+
+                if (bchip.PkType != PKType.UNSET)
+                {
+                    DisplayPrivateKeyButton.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        DisplayPrivateKeyButton.IsEnabled = true;
+                    }));
+                }
+            }
         }
 
         public PageToShow AnalyzeCardData(BChipSmartCard bChipSmartCard)
@@ -304,7 +310,7 @@ namespace BChipDesktop
             }
             catch (Exception ex)
             {
-                WriteToLogFile($"Exception caught when analyzing card: {ex.Message} - {ex.StackTrace}", "AnalyzeCardData");
+                Logger.Log(ex);
             }
 
             return PageToShow.Error;
@@ -355,7 +361,7 @@ namespace BChipDesktop
                             }
                             if (insertedCard.Type() != CardType.BChip)
                             {
-                                WriteToLogFile($"Card type was not an expected BChip and skipped ({insertedCard.Type()})", "InitConnectedCards");
+                                Logger.Log($"Card type was not an expected BChip and skipped ({insertedCard.Type()})");
                                 continue;
                             }
                         }
@@ -397,12 +403,12 @@ namespace BChipDesktop
                             }
                             else
                             {
-                                WriteToLogFile("Card added had no data to download", "_monitor_CardInserted");
+                                Logger.Log("Card added had no data to download");
                             }
                         }
                         catch (Exception ex)
                         {
-                            WriteToLogFile($"Exception while loading card in {insertedCard.ReaderName} - {ex.Message} - {ex.StackTrace}", "ScanAndLoadConnectedCards");
+                            Logger.Log(ex);
                         };
                     }
                 }
@@ -416,32 +422,10 @@ namespace BChipDesktop
                 return context.GetReaders();
             }
         }
-
-        public async void WriteToLogFile(string request, Response adpuResponse, string source = "ADPU Response")
-        {
-            WriteToLogFile($"ADPU response from {request}: {adpuResponse.StatusWord}", source); 
-        }
-
-        public async void WriteToLogFile(string dataToLog, string source = "General")
-        {
-            Monitor.TryEnter(logWriter);
-            {
-                try
-                {
-                    await logWriter.WriteLineAsync($"{DateTime.Now.ToShortTimeString()}({source}):{dataToLog}");
-                }
-                catch
-                { }
-                finally
-                {
-                    Monitor.Exit(logWriter);
-                }
-            }
-        }
-
+        
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            WriteToLogFile($"App closing", "Main");
+            Logger.Log($"App closing");
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -573,28 +557,58 @@ namespace BChipDesktop
 
         private void DecryptButton_Click(object sender, RoutedEventArgs e)
         {
-            DispatcherUpdater(ShowPassphraseViewGrid, Visibility.Collapsed);
-
-            try
+            string password = PassphraseEntryBox.Password;
+            if (string.IsNullOrEmpty(password))
             {
-                BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)LoadedBChips.SmartCardData;
-                string pk = bchip.DecryptedPrivateKeyString(PassphraseEntryBox.Password);
+                UpdateTextLabel(ErrorMessageLabel, "No passphrase provided.");
+                return;
+            }
 
-                PrivateKeyAddressLabel.Content = pk;
-                PrivateQrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
-                   new QrHandler(pk, 5).GetQrCode().GetHbitmap(),
-                   IntPtr.Zero,
-                   Int32Rect.Empty,
-                   BitmapSizeOptions.FromEmptyOptions());
-                
-                ShowPrivateKeyViewGrid.Visibility = Visibility.Visible;
-            }
-            catch (Exception ex)
+            Task.Run(new Action(() =>
             {
-                WriteToLogFile($"Exception hit decrypting card data: {ex.Message} - {ex.StackTrace}");
-                ShowPassphraseViewGrid.Visibility = Visibility.Visible;
-                ErrorMessageLabel.Content = "Failed to decrypt private key. Was the passphrase correct?";
-            }
+                ShowPassphraseViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ShowPassphraseViewGrid.IsEnabled = false;
+                }));
+
+                try
+                {
+                    BChipMemoryLayout_BCHIP bchip = (BChipMemoryLayout_BCHIP)LoadedBChips.SmartCardData;
+                    string pk = bchip.DecryptedPrivateKeyString(password);
+
+                    if (string.IsNullOrEmpty(pk))
+                    {
+                        UpdateTextLabel(ErrorMessageLabel, "Private key could not be decrypted.");
+                        return;
+                    }
+
+                    UpdateTextLabel(PrivateKeyAddressLabel, pk);
+                    PrivateQrCodeImage.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        PrivateQrCodeImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
+                           new QrHandler(pk, 5).GetQrCode().GetHbitmap(),
+                           IntPtr.Zero,
+                           Int32Rect.Empty,
+                           BitmapSizeOptions.FromEmptyOptions());
+                    }));
+
+                    // Change pages
+                    DispatcherUpdater(ShowPassphraseViewGrid, Visibility.Collapsed);
+                    DispatcherUpdater(ShowPrivateKeyViewGrid, Visibility.Visible);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    UpdateTextLabel(ErrorMessageLabel, "Failed to decrypt private key. Bad passphrase?");
+                }
+                finally
+                {
+                    ShowPassphraseViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ShowPassphraseViewGrid.IsEnabled = true;
+                    }));
+                }
+            }));
         }
 
         private void ClearCancelButton_Click(object sender, RoutedEventArgs e)
@@ -624,7 +638,6 @@ namespace BChipDesktop
             CopyPrivateAddressToClipBoard();
         }
 
-        #pragma warning disable 1998 // We want this to be async
         private async void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
             if (FormatConfirmTextBox.Text.Trim().ToLowerInvariant().Contains("yes"))
@@ -646,9 +659,9 @@ namespace BChipDesktop
                     using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
                     {
                         var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
-                        WriteToLogFile("CardUnblock", unlockResponse);
+                        Logger.Log($"ADPU response from pin request: {unlockResponse.StatusWord:X}");
                         var writeResponse = isoReader.Transmit(AdpuHelper.FormatCard(CardType.BChip));
-                        WriteToLogFile("FormatCard", writeResponse);
+                        Logger.Log($"ADPU response from format request: {unlockResponse.StatusWord:X}");
                     }
                 }
 
@@ -656,7 +669,7 @@ namespace BChipDesktop
             }
             catch (Exception ex)
             {
-                WriteToLogFile($"Unhandled exception formatting card: {ex.Message} - {ex.StackTrace}");
+                Logger.Log(ex);
             }
             finally
             {
@@ -668,16 +681,6 @@ namespace BChipDesktop
         private void FormatCard_Click(object sender, RoutedEventArgs e)
         {
             ChangePageUi(PageToShow.ConfirmFormat, LoadedBChips);
-        }
-
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void ProvisionCardButton_Click(object sender, RoutedEventArgs e)
@@ -707,7 +710,7 @@ namespace BChipDesktop
             {
                 // Check if we are importing a user's wif or mnemonic, update public key field 
                 // to allow the user to confirm
-                if (CardGeneratedKey.GetBitcoinSecret(NBitcoin.Network.Main).ToWif() != PrivateKeyTextBox.Text)
+                if (CardGeneratedKey.GetBitcoinSecret(Network).ToWif() != PrivateKeyTextBox.Text)
                 {
                     try
                     {
@@ -735,7 +738,7 @@ namespace BChipDesktop
                     }
                     catch (Exception ex)
                     {
-                        WriteToLogFile($"Exception hit: {ex.Message} - {ex.StackTrace}", "ProvisionCardButton_Click");
+                        Logger.Log(ex);
                         CreateKeyErrorLabel.Content = "Failed to automatically parse private key data.";
                         return;
                     }
@@ -810,7 +813,7 @@ namespace BChipDesktop
                             using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
                             {
                                 var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
-                                WriteToLogFile("CardUnblock", unlockResponse);
+                                Logger.Log($"ADPU response from pin request: {unlockResponse.StatusWord:X}");
                                 if (unlockResponse.StatusWord != 0x00009000)
                                 {
                                     UpdateTextLabel(CreatingKeyLabel, "");
@@ -818,7 +821,7 @@ namespace BChipDesktop
                                     return;
                                 }
                                 var writeResponse = isoReader.Transmit(AdpuHelper.WriteCardData(bchip));
-                                WriteToLogFile("WriteCardData", writeResponse);
+                                Logger.Log($"ADPU response from write card data: {unlockResponse.StatusWord:X}");
                                 if (unlockResponse.StatusWord != 0x00009000)
                                 {
                                     UpdateTextLabel(CreatingKeyLabel, "");
@@ -836,7 +839,7 @@ namespace BChipDesktop
                     }
                     catch (Exception ex)
                     {
-                        WriteToLogFile($"Exception caught while provisioning card: {ex.Message} - {ex.StackTrace}", "ProvisionCardButton_Click");
+                        Logger.Log(ex);
                     }
                     finally
                     {
@@ -880,10 +883,13 @@ namespace BChipDesktop
 
         private void DispatcherUpdater(StackPanel uiControl, Visibility visibility)
         {
-            uiControl.Dispatcher.BeginInvoke(new Action(() =>
+            if (uiControl.Visibility != visibility)
             {
-                uiControl.Visibility = visibility;
-            }));
+                uiControl.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    uiControl.Visibility = visibility;
+                }));
+            }
         }
         
         public PKType CardPkType { get; private set; }
