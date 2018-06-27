@@ -793,6 +793,8 @@ namespace BChipDesktop
                 }
             }
 
+            string friendlyName = FriendlyNameTextBox.Text;
+
             ProvisionNewKeysViewGrid.Dispatcher.BeginInvoke(new Action(() =>
             {
                 ProvisionNewKeysViewGrid.IsEnabled = false;
@@ -807,6 +809,7 @@ namespace BChipDesktop
                         // Encrypt data
                         BChipMemoryLayout_BCHIP bchip = LoadedBChips.SmartCardData as BChipMemoryLayout_BCHIP;
                         bchip.EncryptPrivateKeyData(CardPkType, passphrase.Password, privateKeyToEncrypt, publicKeyData);
+                        bchip.SetFriendlyName(friendlyName);
 
                         using (var context = _contextFactory.Establish(SCardScope.System))
                         {

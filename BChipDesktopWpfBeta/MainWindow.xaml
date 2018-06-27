@@ -34,6 +34,13 @@
                 <PasswordBox Name="passphrase" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
                 <PasswordBox Name="passphraseConfirmation" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
             </Grid>
+            <Grid>
+                <TextBlock  Text="Friendly Name - Short Public Name for your BChip: " FontSize="14"
+                   HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="Center"
+                   />
+                <TextBox Name="FriendlyNameTextBox" HorizontalAlignment="Right" MaxLength="8"
+                         Width="100" Height="20" Margin="0,0,120,0"/>
+            </Grid>
             <TextBlock 
                 Name="HelperText"
                 Text="When setting up a Bitcoin address, a private key is automatically generated for you. You may replace the private key data with a seed phrase mnemonic or your own WIF address." FontSize="14"

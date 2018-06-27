@@ -2,6 +2,7 @@
 using NBitcoin;
 using PCSC;
 using PCSC.Iso7816;
+using SimpleLogger;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -167,8 +168,9 @@ namespace BChipDesktop
         public const int VID_PUKLEN_ADDR = 2;
         // 08-15: Build version identifier
         public const int VID_BUILD_VERSION = 8;
-        // 16-23: Reserved for future use
-        public const int VID_RSVP = 16;
+        // 16-23: Friendly name
+        public const int VID_FRIENDLYNAME_ADDR = 16;
+        public const int VID_FRIENDLYNAME_MAX_DATA = 8;
         public const int VID_DATA_ADDR = SALT_ADDR + SALT_MAX_DATA; // 8+0==8
         public const int VID_MAX_DATA = 24;
         public byte[] bchipVIDent { get; }
@@ -271,6 +273,43 @@ namespace BChipDesktop
             this.crcData = GetCardCheckSum();
         }
 
+        public void SetFriendlyName(string friendlyName)
+        {
+            if (friendlyName.Length > VID_MAX_DATA)
+            {
+                throw new FormatException($"Friendly name was more than {VID_MAX_DATA} characters.");
+            }
+
+            if (String.IsNullOrWhiteSpace(friendlyName))
+            {
+                friendlyName = String.Empty;
+            }
+
+            if (friendlyName.Length < VID_FRIENDLYNAME_MAX_DATA)
+            {
+                for (int i = friendlyName.Length; i < VID_FRIENDLYNAME_MAX_DATA; ++i)
+                {
+                    // Q&D
+                    friendlyName += " ";
+                }
+            }
+
+            try
+            {
+                byte[] friendlyNameBytes = UTF8Encoding.UTF8.GetBytes(friendlyName);
+                for (int i = 0; i < VID_FRIENDLYNAME_MAX_DATA; ++i)
+                {
+                    this.bchipVIDent[VID_FRIENDLYNAME_ADDR + i] = friendlyNameBytes[i];
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                throw new FormatException("Failed to parse friendly name.");
+            }
+
+        }
+
         public byte[] DecryptPrivateKeyData(string passPhrase)
         {
             int expectedLength = bchipVIDent[VID_PKLEN_ADDR];
@@ -366,13 +405,29 @@ namespace BChipDesktop
         {
             get
             {
-                StringBuilder formattedId = new StringBuilder();
-                for (int i = 0; i < mlvi.Length; i+=2)
+                string friendlyName = string.Empty;
+                // If friendly name starts with 0xff, it is not set
+                if (this.bchipVIDent[VID_FRIENDLYNAME_ADDR] != 0xFF)
                 {
-                    formattedId.Append($"{mlvi[i]:X}{mlvi[i+1]:X} ");
+                    byte[] fname = this.bchipVIDent.Skip(VID_FRIENDLYNAME_ADDR).Take(VID_FRIENDLYNAME_MAX_DATA).ToArray();
+
+                    try
+                    {
+                        friendlyName = UTF8Encoding.UTF8.GetString(this.bchipVIDent, VID_FRIENDLYNAME_ADDR, VID_FRIENDLYNAME_MAX_DATA);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
                 }
 
-                return formattedId.ToString();
+                StringBuilder cardId = new StringBuilder();
+                for (int i = 0; i < mlvi.Length; i+=2)
+                {
+                    cardId.Append($"{mlvi[i]:X}{mlvi[i+1]:X} ");
+                }
+
+                return $"{friendlyName} (ID: {cardId.ToString().Trim()})";
             }
         }
         
