@@ -33,7 +33,8 @@
                 <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/>
             </ComboBox>
         </StackPanel>
-        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Name="ProvisionNewKeysViewGrid" 
+                    Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="You must choose a secure passphrase. It is extremely important you never forget your passphrase - there is absolutely no recovery. Enter it twice." FontSize="14"
                    HorizontalAlignment="Center" Height="48" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
@@ -54,6 +55,8 @@
                 <TextBox Name="PublicKeyTextBox" MinLines="5" MaxLength="64" TextWrapping="Wrap" 
                          HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
                 <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" TextWrapping="Wrap" 
+                         Style="{StaticResource MaterialDesignTextAreaTextBox}"
+                         VerticalAlignment="Top"  AcceptsReturn="True"
                          HorizontalAlignment="Right" Width="200" Margin="0,0,50,0" TextInput="PrivateKeyTextBox_TextInput"/>
             </Grid>
             <Button Name="ProvisionCardButton" Content="Submit" Width="150" MinHeight="30" Margin="5,5,5,5"
