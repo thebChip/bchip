@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BChipDesktop"
+        xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
         mc:Ignorable="d"
         Title="bChip Desktop Beta" Height="400" Width="560" Closing="Window_Closing" Icon="icon.ico"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -56,6 +57,7 @@
                          HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
                 <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" TextWrapping="Wrap" 
                          Style="{StaticResource MaterialDesignTextAreaTextBox}"
+                         wpf:HintAssist.Hint="Hint Name" 
                          VerticalAlignment="Top"  AcceptsReturn="True"
                          HorizontalAlignment="Right" Width="200" Margin="0,0,50,0" TextInput="PrivateKeyTextBox_TextInput"/>
             </Grid>

@@ -249,6 +249,9 @@
     <PackageReference Include="MaterialDesignThemes.MahApps">
       <Version>0.0.11</Version>
     </PackageReference>
+    <PackageReference Include="MaterialDesignThemes.MahApps.163">
+      <Version>0.0.111</Version>
+    </PackageReference>
     <PackageReference Include="ShowMeTheXAML">
       <Version>1.0.10</Version>
     </PackageReference>
