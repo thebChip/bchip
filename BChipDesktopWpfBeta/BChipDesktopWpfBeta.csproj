@@ -263,13 +263,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BinaryDependencies\ControlzEx.dll" />
-    <Content Include="BinaryDependencies\MahApps.Metro.dll" />
-    <Content Include="BinaryDependencies\MaterialDesignColors.dll" />
-    <Content Include="BinaryDependencies\MaterialDesignThemes.MahApps.dll" />
-    <Content Include="BinaryDependencies\MaterialDesignThemes.Wpf.dll" />
-    <Content Include="BinaryDependencies\ShowMeTheXAML.dll" />
-    <Content Include="BinaryDependencies\System.Windows.Interactivity.dll" />
+    <EmbeddedResource Include="BinaryDependencies\ControlzEx.dll" />
+    <EmbeddedResource Include="BinaryDependencies\MahApps.Metro.dll" />
+    <EmbeddedResource Include="BinaryDependencies\MaterialDesignColors.dll" />
+    <EmbeddedResource Include="BinaryDependencies\MaterialDesignThemes.MahApps.dll" />
+    <EmbeddedResource Include="BinaryDependencies\MaterialDesignThemes.Wpf.dll" />
+    <EmbeddedResource Include="BinaryDependencies\ShowMeTheXAML.dll" />
+    <EmbeddedResource Include="BinaryDependencies\System.Windows.Interactivity.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
