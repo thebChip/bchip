@@ -922,14 +922,14 @@ namespace BChipDesktop
                 PublicKeyTextBox.Text = CardGeneratedKey.PubKey.GetAddress(Network).ToString();
                 PrivateKeyTextBox.Text = CardGeneratedKey.GetBitcoinSecret(Network).ToWif();
 
-                HelperText.Text = "When setting up a Bitcoin address, a private key is automatically generated for you. You can replace the private key data with a seed phrase mnemonic or your own WIF address.";
+                //HelperText.Text = "When setting up a Bitcoin address, a private key is automatically generated for you. You can replace the private key data with a seed phrase mnemonic or your own WIF address.";
             }
             else
             {
                 PublicKeyTextBox.Text = String.Empty;
                 PrivateKeyTextBox.Text = String.Empty;
 
-                HelperText.Text = "Public data is not encrypted and optional. Any data may be used in the Private Key textbox, as long as it is under 96 bytes.";
+               // HelperText.Text = "Public data is not encrypted and optional. Any data may be used in the Private Key textbox, as long as it is under 96 bytes.";
             }
         }
 
@@ -951,9 +951,20 @@ namespace BChipDesktop
             ChangePageUi(PageToShow.ProvisionCard, LoadedBChips);
         }
 
+        private void CreateSeedPhrase_Click(object sender, RoutedEventArgs e)
+        {
+            SetupProvisioningWindow(PKType.CUSTOM);
+            ChangePageUi(PageToShow.ProvisionCard, LoadedBChips);
+        }
+
         private void PrivateKeyTextBox_TextInput(object sender, TextCompositionEventArgs e)
         {
             // TODO: We'll eventually shuffle raw memory around each keystroke. This incldues hid for fun.
+        }
+
+        private void PrivateKeyTextBox_TextChanged(object sender)
+        {
+
         }
     }
 }
