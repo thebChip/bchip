@@ -793,6 +793,8 @@ namespace BChipDesktop
                 }
             }
 
+            string friendlyName = FriendlyNameTextBox.Text;
+
             ProvisionNewKeysViewGrid.Dispatcher.BeginInvoke(new Action(() =>
             {
                 ProvisionNewKeysViewGrid.IsEnabled = false;
@@ -807,6 +809,7 @@ namespace BChipDesktop
                         // Encrypt data
                         BChipMemoryLayout_BCHIP bchip = LoadedBChips.SmartCardData as BChipMemoryLayout_BCHIP;
                         bchip.EncryptPrivateKeyData(CardPkType, passphrase.Password, privateKeyToEncrypt, publicKeyData);
+                        bchip.SetFriendlyName(friendlyName);
 
                         using (var context = _contextFactory.Establish(SCardScope.System))
                         {
@@ -919,14 +922,14 @@ namespace BChipDesktop
                 PublicKeyTextBox.Text = CardGeneratedKey.PubKey.GetAddress(Network).ToString();
                 PrivateKeyTextBox.Text = CardGeneratedKey.GetBitcoinSecret(Network).ToWif();
 
-                HelperText.Text = "When setting up a Bitcoin address, a private key is automatically generated for you. You can replace the private key data with a seed phrase mnemonic or your own WIF address.";
+                //HelperText.Text = "When setting up a Bitcoin address, a private key is automatically generated for you. You can replace the private key data with a seed phrase mnemonic or your own WIF address.";
             }
             else
             {
                 PublicKeyTextBox.Text = String.Empty;
                 PrivateKeyTextBox.Text = String.Empty;
 
-                HelperText.Text = "Public data is not encrypted and optional. Any data may be used in the Private Key textbox, as long as it is under 96 bytes.";
+               // HelperText.Text = "Public data is not encrypted and optional. Any data may be used in the Private Key textbox, as long as it is under 96 bytes.";
             }
         }
 

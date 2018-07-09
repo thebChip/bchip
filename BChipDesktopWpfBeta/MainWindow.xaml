@@ -19,56 +19,78 @@
             <Image HorizontalAlignment="Center" Height="96"  VerticalAlignment="Bottom" Width="100" Source="./Assets/NotConnected-icon.PNG"/>
         </StackPanel>
         <StackPanel Name="NonInitializedWizardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Label 
-                   Content="This bChip is ready to be setup." FontSize="14"
-                   HorizontalAlignment="left"
+            <TextBlock  Text="Always Keep Multiple Backups of Data" FontSize="16"
+                   HorizontalAlignment="Center" Height="135" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
-            <Label  
-                   Content="Chose the type of private key you want to setup on this card" FontSize="14"
-                   HorizontalAlignment="Center"
+            <Grid>
+                <Label 
+                   Content="This BChip is ready to be setup" FontSize="14" Margin="171,0,164,-9.2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="213" Height="36"
                    />
-            <ComboBox Name="WalletTypeComboBox">
+            </Grid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="307*"/>
+                    <ColumnDefinition Width="43*"/>
+                    <ColumnDefinition Width="20*"/>
+                    <ColumnDefinition Width="178*"/>
+                </Grid.ColumnDefinitions>
+                <Label  
+                   Content="Select a setup option from the dropdown" FontSize="14" Margin="136.5,0,138.97,0" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="4"
+                   />
+            </Grid>
+            <ComboBox x:Name="WalletTypeComboBox" Width="272" HorizontalAlignment="Center">
                 <ComboBoxItem Selected="CreateBtcWallet_Click" Content="Bitcoin (BTC)"/>
                 <ComboBoxItem Selected="CreateBtcTestnetWallet_Click" Content="Bitcoin (Testnet)"/>
                 <ComboBoxItem Selected="CreateCustomButton_Click" Content="Custom Wallet"/>
                 <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/>
             </ComboBox>
         </StackPanel>
-        <StackPanel Name="ProvisionNewKeysViewGrid" 
-                    Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock  Text="You must choose a secure passphrase. It is extremely important you never forget your passphrase - there is absolutely no recovery. Enter it twice." FontSize="14"
-                   HorizontalAlignment="Center" Height="48" Width="548" TextWrapping="Wrap" TextAlignment="Center"
+        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock  Text="BChip Setup" FontSize="18"
+                   HorizontalAlignment="Center" Height="18" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
-            <Grid>
-                <PasswordBox Name="passphrase" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
-                <PasswordBox Name="passphraseConfirmation" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
-            </Grid>
-            <TextBlock 
-                Name="HelperText"
-                Text="When setting up a Bitcoin address, a private key is automatically generated for you. You may replace the private key data with a seed phrase mnemonic or your own WIF address." FontSize="14"
-                   HorizontalAlignment="Center" Width="548" TextWrapping="Wrap" TextAlignment="Center"
-                   />
-            <Grid>
-                <Label Content="Public Key Data (optional)" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
-                <Label Content="Private Key Data (will be encrypted)" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"/>
+            <Grid Width="160">
+                <TextBlock FontSize="14"
+                           HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="left" />
+                <TextBox x:Name="FriendlyNameTextBox" HorizontalAlignment="Right" MaxLength="8"
+                         wpf:HintAssist.Hint="Title - 8 Char Limit"
+                         Width="201" Margin="-145,0,104,10"/>
             </Grid>
             <Grid>
-                <TextBox Name="PublicKeyTextBox" MinLines="5" MaxLength="64" TextWrapping="Wrap" 
-                         HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
-                <TextBox Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" TextWrapping="Wrap" 
+                <PasswordBox x:Name="passphrase" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"
+                 wpf:HintAssist.Hint="Password - Do Not Forget" Grid.ColumnSpan="3"/>
+                <PasswordBox x:Name="passphraseConfirmation" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"
+                 wpf:HintAssist.Hint="Confirm Password" Grid.Column="2"/>
+            </Grid>
+            <Grid>
+                <Label Content="Public Data (plaintext)" HorizontalAlignment="Left" Width="200" Margin="50,20,0,0"/>
+                <Label Content="Private Data (encrypted)" HorizontalAlignment="Right" Width="200" Margin="0,20,50,0"/>
+            </Grid>
+            <Grid>
+                <TextBox x:Name="PublicKeyTextBox" MinLines="5" MaxLength="64" TextWrapping="Wrap" 
                          Style="{StaticResource MaterialDesignTextAreaTextBox}"
-                         wpf:HintAssist.Hint="Hint Name" 
+                         wpf:HintAssist.Hint="(Optional) 96 Char Limit"
+                         HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"/>
+                <TextBox x:Name="PrivateKeyTextBox" MinLines="5" MaxLength="96" TextWrapping="Wrap" 
+                         Style="{StaticResource MaterialDesignTextAreaTextBox}"
+                         wpf:HintAssist.Hint="(Required) 96 Char Limit"
                          VerticalAlignment="Top"  AcceptsReturn="True"
                          HorizontalAlignment="Right" Width="200" Margin="0,0,50,0" TextInput="PrivateKeyTextBox_TextInput"/>
             </Grid>
-            <Button Name="ProvisionCardButton" Content="Submit" Width="150" MinHeight="30" Margin="5,5,5,5"
+            <Grid Height="48">
+                <Grid Margin="297,0,50,0">
+                    <Button x:Name="ProvisionCardButton" Content="Submit" Width="105" MinHeight="30" Margin="0,8" HorizontalAlignment="Left"
                     Click="ProvisionCardButton_Click"/>
-            <Button Content="Go Back" Height="33" Width="120" Click="ClearCancelButton_Click"/>
+                </Grid>
+                <Grid Margin="51,0,298,0">
+                    <Button Content="Go Back" Width="105" MinHeight="30" Margin="0,8" HorizontalAlignment="Right" Click="ClearCancelButton_Click" />
+                </Grid>
+            </Grid>
             <Grid>
-                <Label Name="CreateKeyErrorLabel" Content="" 
+                <Label x:Name="CreateKeyErrorLabel" Content="" 
                    HorizontalAlignment="Center" VerticalAlignment="Bottom" 
                    FontSize="20" FontWeight="Bold" Foreground="#FFD10E0E"/>
-                <Label Name="CreatingKeyLabel" Content="" 
+                <Label x:Name="CreatingKeyLabel" Content="" 
                    HorizontalAlignment="Center" VerticalAlignment="Bottom" 
                    FontSize="20" FontWeight="Bold" Foreground="#FF7DDC0B"/>
             </Grid>
@@ -85,15 +107,15 @@
         </StackPanel>
         <StackPanel Name="ReadyCardViewGrid" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
             <Grid Grid.Row="0">
-            <Label  
-                   Content="bChip ID:" FontSize="14"
+                <Label  
+                   Content="BChip ID:" FontSize="14"
                    HorizontalAlignment="Left"
                    />
-            <Label x:Name="BChipIdLabel" 
+                <Label x:Name="BChipIdLabel" 
                    Content="XXXX XXXX XXXX XXXX" FontSize="14"
                    HorizontalAlignment="Center"
                    />
-            <Label x:Name="PKTypeLabel" 
+                <Label x:Name="PKTypeLabel" 
                    Content="Bitcoin (BTC)" FontSize="14"
                    HorizontalAlignment="Right"
                    />
@@ -101,7 +123,7 @@
             <Image x:Name="QrCodeImage" Height="156" Width="155" />
             <Grid Margin="0,30,-0.333,0" 
                   TouchDown="PublicKeyAddressLabel_TouchDown"
-                  MouseDown="PublicKeyAddressLabel_TouchDown"
+                  MouseDown="PublicKeyAddressLabel_TouchDown" Height="68"
                   >
                 <Label x:Name="PublicKeyAddressLabel" 
                    Content="Public key not loaded." FontSize="14"
@@ -110,38 +132,47 @@
                 <Image Name="PubKeyCopyIcon" Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" Stretch="None" />
             </Grid>
             <Grid>
-                <Button Name="DisplayPrivateKeyButton" Content="Display Private Key" HorizontalAlignment="Center" Height="33" Width="108" Click="DisplayPrivateKey_Click" VerticalAlignment="Bottom" Margin="0,-4,414.667,4.333"/>
-                <Button Content="Erase Card" HorizontalAlignment="Right" Height="33" Width="108" Click="FormatCard_Click" VerticalAlignment="Bottom" Margin="0,-4,19.667,4.333"/>
+                <Button Name="DisplayPrivateKeyButton" Content="Decrypt" HorizontalAlignment="Center" Height="33" Width="108" Click="DisplayPrivateKey_Click" VerticalAlignment="Bottom" Margin="0,-4,414.667,4.333"/>
+                <Button Content="Erase Card" HorizontalAlignment="Right" Height="33" Width="108" Click="FormatCard_Click" VerticalAlignment="Bottom" Margin="0,-4,0,4.333"/>
             </Grid>
         </StackPanel>
-        <StackPanel Name="ConfirmFormatViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom">
-            <Label Content="WARNING: Formatting a bchip will PERMANENTLY erase all data." FontSize="16"
-                   HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" 
+        <StackPanel Name="ConfirmFormatViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom" Height="141">
+            <Label Content="WARNING: Formatting a BChip will PERMANENTLY erase all data." FontSize="16"
+                   HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" Height="26" Margin="25,0" 
                    />
             <Label Content="To confirm format, type yes below."
-                   HorizontalAlignment="Center"                    />
+                   HorizontalAlignment="Center" Height="26" Margin="162,0"                    />
             <Grid Height="35">
-                <TextBox Name="FormatConfirmTextBox" FontSize="16"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="65*"/>
+                    <ColumnDefinition Width="10*"/>
+                    <ColumnDefinition Width="63*"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Name="FormatConfirmTextBox" FontSize="16" Grid.ColumnSpan="3"/>
             </Grid>
             <Grid>
-                <Button Content="Confirm" HorizontalAlignment="Center" Height="33" Width="121" Click="ConfirmButton_Click"/>
-                <Button Content="Go Back" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="175*"/>
+                    <ColumnDefinition Width="377*"/>
+                </Grid.ColumnDefinitions>
+                <Button Content="Confirm" HorizontalAlignment="Center" Height="33" Width="100" Click="ConfirmButton_Click" Margin="52,10,225,-10" Grid.Column="1"/>
+                <Button Content="Back" HorizontalAlignment="Right" Height="33" Width="100" Click="ClearCancelButton_Click" Grid.Column="1" Margin="0,12,10,-12"/>
             </Grid>
         </StackPanel>
         <StackPanel Name="FormatingViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom">
-            <Label Content="Formatting... Do not remove bchip or unplug the reader!" FontSize="16"
+            <Label Content="Formatting... Do not remove BChip or unplug the reader!" FontSize="16"
                    HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" 
                    />
         </StackPanel>
         <StackPanel Name="ShowPassphraseViewGrid" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <Label Content="Enter your bChips passphrase to decrypt data" FontSize="14" />
+            <Label Content="Enter your BChips passphrase to decrypt data" FontSize="14" />
             <Grid Height="35">
-                <PasswordBox Name="PassphraseEntryBox" FontSize="16" Width="300"/>
+                <PasswordBox Name="PassphraseEntryBox" FontSize="16" Width="300" Margin="0,0,0,10"/>
             </Grid>
             <Grid>
-                <Button Name="DecryptButton" Content="Decrypt Private Key" HorizontalAlignment="Left" 
+                <Button Name="DecryptButton" Content="Decrypt" HorizontalAlignment="Left" 
                         Height="33" Width="121" Click="DecryptButton_Click"/>
-                <Button Content="Go Back" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click"/>
+                <Button Content="Back" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click"/>
             </Grid>
             <Label Name="ErrorMessageLabel" Content="Error Message" FontSize="14" Foreground="#FFC81F1F" />
         </StackPanel>
@@ -157,7 +188,7 @@
                    />
                 <Image Name="PrivateKeyCopyIcon" Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" Stretch="None" />
             </Grid>
-            <Button Content="Go Back" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="108" Click="ClearCancelButton_Click"/>
+            <Button Content="Back" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="100" Click="ClearCancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>
