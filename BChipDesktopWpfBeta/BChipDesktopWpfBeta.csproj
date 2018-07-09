@@ -262,5 +262,14 @@
       <Version>1.0.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="BinaryDependencies\ControlzEx.dll" />
+    <Content Include="BinaryDependencies\MahApps.Metro.dll" />
+    <Content Include="BinaryDependencies\MaterialDesignColors.dll" />
+    <Content Include="BinaryDependencies\MaterialDesignThemes.MahApps.dll" />
+    <Content Include="BinaryDependencies\MaterialDesignThemes.Wpf.dll" />
+    <Content Include="BinaryDependencies\ShowMeTheXAML.dll" />
+    <Content Include="BinaryDependencies\System.Windows.Interactivity.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

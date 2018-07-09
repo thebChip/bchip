@@ -39,6 +39,8 @@ namespace BChipDesktop
         BTC         = 0x20,
         BTC_TestNet = 0x21,
         ETH         = 0x30,
+        // To be supported soon! 
+        Mnemonic    = 0x50,
 
         // Custom entrees are manually created by users either for obscurity 
         // or unsupported key storage.

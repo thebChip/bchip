@@ -42,10 +42,11 @@
                 <ComboBoxItem Selected="CreateBtcWallet_Click" Content="Bitcoin (BTC)"/>
                 <ComboBoxItem Selected="CreateBtcTestnetWallet_Click" Content="Bitcoin (Testnet)"/>
                 <ComboBoxItem Selected="CreateCustomButton_Click" Content="Custom Wallet"/>
-                <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/>
+                <!-- Coming soon. Will likely go BIP32 with WD options or internal 2way design. -->
+                <!-- <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/> -->
             </ComboBox>
         </StackPanel>
-        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="BChip Setup" FontSize="18"
                    HorizontalAlignment="Center" Height="18" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
