@@ -42,9 +42,50 @@
                 <ComboBoxItem Selected="CreateBtcWallet_Click" Content="Bitcoin (BTC)"/>
                 <ComboBoxItem Selected="CreateBtcTestnetWallet_Click" Content="Bitcoin (Testnet)"/>
                 <ComboBoxItem Selected="CreateCustomButton_Click" Content="Custom Wallet"/>
-                <!-- Coming soon. Will likely go BIP32 with WD options or internal 2way design. -->
-                <!-- <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/> -->
+                <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/> 
             </ComboBox>
+        </StackPanel>
+        <StackPanel Name="ProvisionMnemonicPhraseViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock  Text="BChip Setup" FontSize="18"
+                   HorizontalAlignment="Center" Height="18" Width="548" TextWrapping="Wrap" TextAlignment="Center"
+                   />
+            <Grid Width="160">
+                <TextBlock FontSize="14"
+                           HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="left" />
+                <TextBox x:Name="MnemonicFriendlyNameTextBox" HorizontalAlignment="Right" MaxLength="8"
+                         wpf:HintAssist.Hint="Title - 8 Char Limit"
+                         Width="201" Margin="-145,0,104,10"/>
+            </Grid>
+            <Grid>
+                <PasswordBox x:Name="Mnemonicpassphrase" HorizontalAlignment="Left" Width="200" Margin="50,0,0,0"
+                 wpf:HintAssist.Hint="Password - Do Not Forget" Grid.ColumnSpan="3"/>
+                <PasswordBox x:Name="MnemonicpassphraseConfirmation" HorizontalAlignment="Right" Width="200" Margin="0,0,50,0"
+                 wpf:HintAssist.Hint="Confirm Password" Grid.Column="2"/>
+            </Grid>
+            <Label Content="Mnemonic" HorizontalAlignment="Left" Width="200" Margin="45,10,0,0" Height="27"/>
+            <TextBox x:Name="MnemonicEntryTextBox" MinLines="5" MaxLength="255" TextWrapping="Wrap" 
+                         Style="{StaticResource MaterialDesignTextAreaTextBox}"
+                         wpf:HintAssist.Hint="(Required) 24 Word Limit"
+                         VerticalAlignment="Top"  AcceptsReturn="True"
+                         HorizontalAlignment="Right" Width="447" Margin="5,0,50,0" Height="117"/>
+            <Grid Height="48">
+                <Grid Margin="297,0,50,0">
+                    <Button x:Name="MnemonicProvisionCardButton" Content="Submit" Width="105" MinHeight="30" Margin="0,8" 
+                            HorizontalAlignment="Left"
+                    Click="MnemonicProvisionCardButton_Click"/>
+                </Grid>
+                <Grid Margin="51,0,298,0">
+                    <Button Content="Go Back" Width="105" MinHeight="30" Margin="0,8" HorizontalAlignment="Right" Click="ClearCancelButton_Click" />
+                </Grid>
+            </Grid>
+            <Grid>
+                <Label x:Name="MnemonicErrorLabel" Content="" 
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                   FontSize="20" FontWeight="Bold" Foreground="#FFD10E0E"/>
+                <Label x:Name="MnemonicKeyLabel" Content="" 
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                   FontSize="20" FontWeight="Bold" Foreground="#FF7DDC0B"/>
+            </Grid>
         </StackPanel>
         <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="BChip Setup" FontSize="18"
@@ -184,9 +225,12 @@
                   MouseDown="PrivateKeyAddressLabel_TouchDown"
                   >
                 <Label x:Name="PrivateKeyAddressLabel" 
-                   Content="No Private Key Loaded" FontSize="14"
-                   HorizontalAlignment="Center" Margin="66,10,9,-0.333" Width="444" Foreground="#FF0800FF" 
-                   />
+                    FontSize="14" 
+                   HorizontalAlignment="Center" Margin="66,10,9,-0.333" Width="444" Foreground="#FF0800FF">
+                    <Label.Content>
+                        <AccessText TextWrapping="Wrap" Text="No Private Key Loaded"/>
+                    </Label.Content>
+                </Label>
                 <Image Name="PrivateKeyCopyIcon" Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" Stretch="None" />
             </Grid>
             <Button Content="Back" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="100" Click="ClearCancelButton_Click"/>

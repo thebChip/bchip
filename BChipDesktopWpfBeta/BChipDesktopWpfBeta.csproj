@@ -129,6 +129,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BIP39Helpers.cs" />
     <Compile Include="QrHandler.cs" />
     <Compile Include="DeviceEventMonitor.cs" />
     <Page Include="MainWindow.xaml">
