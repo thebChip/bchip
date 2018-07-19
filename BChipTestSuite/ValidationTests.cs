@@ -79,7 +79,7 @@ namespace BChipTestSuite
         [TestMethod]
         public void CrcValidation()
         {
-            byte[] mlvi = CryptographicBuffer.DecodeFromHexString("c46b44c67a053a").ToArray();
+            byte[] mlvi = CryptographicBuffer.DecodeFromHexString("a1c46b44c67a053a").ToArray();
             byte[] salt = CryptographicBuffer.DecodeFromHexString("5555555555555555").ToArray();
             byte[] bchipid = CryptographicBuffer.DecodeFromHexString("febbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").ToArray();
             byte[] pubkey = new byte[BChipMemoryLayout_BCHIP.PUBKEY_MAX_DATA];
