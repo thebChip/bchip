@@ -16,7 +16,7 @@
     <Grid>
         <StackPanel Name="InsertCardGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label Content="Please insert BChip into smart card reader" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" />
-            <Image HorizontalAlignment="Center" Height="96"  VerticalAlignment="Bottom" Width="100" Source="./Assets/NotConnected-icon.PNG"/>
+            <Image HorizontalAlignment="Center" Height="66"  VerticalAlignment="Bottom" Width="60" Source="./Assets/card-reader-sd-photos.png"/>
         </StackPanel>
         <StackPanel Name="NonInitializedWizardViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="Always Keep Multiple Backups of Data" FontSize="16"
@@ -42,12 +42,12 @@
                 <ComboBoxItem Selected="CreateBtcWallet_Click" Content="Bitcoin (BTC)"/>
                 <ComboBoxItem Selected="CreateBtcTestnetWallet_Click" Content="Bitcoin (Testnet)"/>
                 <ComboBoxItem Selected="CreateCustomButton_Click" Content="Custom Wallet"/>
-                <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/> 
+                <ComboBoxItem Selected="CreateSeedPhrase_Click" Content="Mnemonic Phrase"/>
             </ComboBox>
         </StackPanel>
         <StackPanel Name="ProvisionMnemonicPhraseViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="BChip Setup" FontSize="18"
-                   HorizontalAlignment="Center" Height="18" Width="548" TextWrapping="Wrap" TextAlignment="Center"
+                   HorizontalAlignment="Center" Height="26" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
             <Grid Width="160">
                 <TextBlock FontSize="14"
@@ -89,7 +89,7 @@
         </StackPanel>
         <StackPanel Name="ProvisionNewKeysViewGrid" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock  Text="BChip Setup" FontSize="18"
-                   HorizontalAlignment="Center" Height="18" Width="548" TextWrapping="Wrap" TextAlignment="Center"
+                   HorizontalAlignment="Center" Height="28" Width="548" TextWrapping="Wrap" TextAlignment="Center"
                    />
             <Grid Width="160">
                 <TextBlock FontSize="14"
@@ -180,7 +180,7 @@
         </StackPanel>
         <StackPanel Name="ConfirmFormatViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom" Height="141">
             <Label Content="WARNING: Formatting a BChip will PERMANENTLY erase all data." FontSize="16"
-                   HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" Height="26" Margin="25,0" 
+                   HorizontalAlignment="Center" Foreground="Black" Background="#FFD71414" FontWeight="Bold" Height="30" Margin="26,0" 
                    />
             <Label Content="To confirm format, type yes below."
                    HorizontalAlignment="Center" Height="26" Margin="162,0"                    />
@@ -190,15 +190,19 @@
                     <ColumnDefinition Width="10*"/>
                     <ColumnDefinition Width="63*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Name="FormatConfirmTextBox" FontSize="16" Grid.ColumnSpan="3"/>
+                <TextBox Name="FormatConfirmTextBox" FontSize="16" Grid.ColumnSpan="3" TextAlignment="Center"/>
             </Grid>
-            <Grid>
+            <Grid Height="49">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="175*"/>
                     <ColumnDefinition Width="377*"/>
                 </Grid.ColumnDefinitions>
-                <Button Content="Confirm" HorizontalAlignment="Center" Height="33" Width="100" Click="ConfirmButton_Click" Margin="52,10,225,-10" Grid.Column="1"/>
-                <Button Content="Back" HorizontalAlignment="Right" Height="33" Width="100" Click="ClearCancelButton_Click" Grid.Column="1" Margin="0,12,10,-12"/>
+                <Grid Grid.ColumnSpan="2" Height="30" Margin="42,9,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="165">
+                    <Button Content="Go Back" Height="33" Click="ClearCancelButton_Click" Margin="0,-3,27,0" HorizontalAlignment="Right" Width="100"/>
+                </Grid>
+                <Grid Grid.Column="1" HorizontalAlignment="Center" Height="30" Margin="125.049,9,0,0" VerticalAlignment="Top" Width="165">
+                    <Button Content="Confirm" Height="Auto" Click="ConfirmButton_Click" Margin="32.976,-3,32.024,0"/>
+                </Grid>
             </Grid>
         </StackPanel>
         <StackPanel Name="FormatingViewGrid" Visibility="Collapsed" VerticalAlignment="Bottom">
@@ -213,8 +217,8 @@
             </Grid>
             <Grid>
                 <Button Name="DecryptButton" Content="Decrypt" HorizontalAlignment="Left" 
-                        Height="33" Width="121" Click="DecryptButton_Click"/>
-                <Button Content="Back" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click"/>
+                        Height="33" Width="121" Click="DecryptButton_Click" Margin="179,0,0,0"/>
+                <Button Content="Go Back" HorizontalAlignment="Right" Height="33" Width="121" Click="ClearCancelButton_Click" Margin="0,0,179,0"/>
             </Grid>
             <Label Name="ErrorMessageLabel" Content="Error Message" FontSize="14" Foreground="#FFC81F1F" />
         </StackPanel>
@@ -233,7 +237,7 @@
                 </Label>
                 <Image Name="PrivateKeyCopyIcon" Source="Assets/Editing-Copy-icon.png" Margin="20,0,458,10" Stretch="None" />
             </Grid>
-            <Button Content="Back" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="100" Click="ClearCancelButton_Click"/>
+            <Button Content="Go Back" Margin="0,20,19.667,0" HorizontalAlignment="Right" Height="33" Width="100" Click="ClearCancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

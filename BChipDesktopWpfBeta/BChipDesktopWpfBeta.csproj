@@ -198,7 +198,6 @@
     <EmbeddedResource Include="BinaryDependencies\PCSC.Iso7816.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Assets\Connected-icon.PNG" />
     <Resource Include="Assets\Data-List-icon.png" />
     <Resource Include="Assets\DataList-icon.png" />
     <Resource Include="Assets\Delete-icon.PNG" />
@@ -271,6 +270,9 @@
     <EmbeddedResource Include="BinaryDependencies\MaterialDesignThemes.Wpf.dll" />
     <EmbeddedResource Include="BinaryDependencies\ShowMeTheXAML.dll" />
     <EmbeddedResource Include="BinaryDependencies\System.Windows.Interactivity.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\card-reader-sd-photos.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
