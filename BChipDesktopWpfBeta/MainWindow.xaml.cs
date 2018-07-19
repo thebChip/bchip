@@ -146,6 +146,7 @@ namespace BChipDesktop
             ClearPasswordBox(passphraseConfirmation);
             ClearPasswordBox(Mnemonicpassphrase);
             ClearPasswordBox(MnemonicpassphraseConfirmation);
+            ClearTextBox(MnemonicEntryTextBox);
             
             // Clear last error if set
             UpdateTextLabel(ErrorMessageLabel, "");

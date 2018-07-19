@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,24 +16,25 @@ namespace BChipDesktop
         {
             if (entropy == null || entropy.Length == 0)
             {
-                throw new Exception("Seed was null or empty.");
+                throw new FormatException("Seed was null or empty.");
             }
 
             List<string> mnemonic = new List<string>();
 
             if (entropy.Length % 4 > 0)
             {
-                throw new Exception("Seed must be multiples of 32 bits of entropy");
+                throw new FormatException("Seed must be multiples of 32 bits of entropy");
             }
             else if (entropy.Length < 8)
             {
-                throw new Exception("Seed must be at least 64 bits of entropy");
+                throw new FormatException("Seed must be at least 64 bits of entropy");
             }
             else if (entropy.Length > 124)
             {
-                throw new Exception("Seed must not exceed 992 bits of entropy");
+                throw new FormatException("Seed must not exceed 992 bits of entropy");
             }
 
+            // There's a reason to this double array madness...
             BitArray entropyBitArray = new BitArray(BytesToBoolArray(entropy));
             int checksumLengthBits = entropyBitArray.Length / 32;
             Array entropyBits = Array.CreateInstance(typeof(bool), entropyBitArray.Length);
@@ -78,7 +80,7 @@ namespace BChipDesktop
             // Should always have at least 12 words
             if (words.Length % 3 > 0 || words.Length == 0)
             {
-                throw new Exception("Word list size must be a multiple of three words");
+                throw new FormatException("Word list size must be a multiple of three words");
             }
 
             int concatLenBits = words.Length * 11;
@@ -129,7 +131,7 @@ namespace BChipDesktop
                 bool hashbit = (bool)hashBits.GetValue(i);
                 if (concatbit != hashbit)
                 {
-                    throw new Exception("CRC Checksum validation failed");
+                    throw new Bip39CrcException("CRC Checksum validation failed");
                 }
             }
 
@@ -150,4 +152,24 @@ namespace BChipDesktop
             return bits;
         }
     }
+
+    public class Bip39CrcException : Exception, ISerializable
+    {
+        public Bip39CrcException() : base()
+        {
+        }
+
+        public Bip39CrcException(string message):base(message)
+        {
+        }
+
+        public Bip39CrcException(string message, Exception inner) : base(message, inner)
+        {
+        }
+        
+        protected Bip39CrcException(SerializationInfo info, StreamingContext context):base(info, context)
+        {
+        }
+    }
+
 }
