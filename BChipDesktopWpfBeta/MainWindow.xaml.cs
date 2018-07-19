@@ -126,6 +126,7 @@ namespace BChipDesktop
             CrcError,
             Unsupported,
             ProvisionCard,
+            ProvisionMnemonic,
         }
         public void ChangePageUi(PageToShow pageToShow, BChipSmartCard bChipSmartCard)
         {
@@ -137,17 +138,24 @@ namespace BChipDesktop
             Visibility crcErrorViewGridVisibility = Visibility.Collapsed;
             Visibility unsupportedDialogVisibility = Visibility.Collapsed;
             Visibility provisionNewKeysViewGridVisibility = Visibility.Collapsed;
+            Visibility provisionMnemonicViewGridVisibility = Visibility.Collapsed;
             Visibility showPrivateKeyViewGridVisibility = Visibility.Collapsed;
 
             ClearPasswordBox(PassphraseEntryBox);
             ClearPasswordBox(passphrase);
             ClearPasswordBox(passphraseConfirmation);
+            ClearPasswordBox(Mnemonicpassphrase);
+            ClearPasswordBox(MnemonicpassphraseConfirmation);
+            ClearTextBox(MnemonicEntryTextBox);
             
             // Clear last error if set
             UpdateTextLabel(ErrorMessageLabel, "");
 
             switch (pageToShow)
             {
+                case PageToShow.ProvisionMnemonic:
+                    provisionMnemonicViewGridVisibility = Visibility.Visible;
+                    break;
                 case PageToShow.ProvisionCard:
                     provisionNewKeysViewGridVisibility = Visibility.Visible;
                     break;
@@ -175,6 +183,7 @@ namespace BChipDesktop
                     break;
             }
 
+            DispatcherUpdater(ProvisionMnemonicPhraseViewGrid, provisionMnemonicViewGridVisibility);
             DispatcherUpdater(ShowPrivateKeyViewGrid, showPrivateKeyViewGridVisibility);
             DispatcherUpdater(ProvisionNewKeysViewGrid, provisionNewKeysViewGridVisibility);
             DispatcherUpdater(NonInitializedWizardViewGrid, notInitializedWizardVisibility);
@@ -382,7 +391,7 @@ namespace BChipDesktop
                     ChangePageUi(PageToShow.NoCard, null);
                 }
 
-                if (insertedCard != null)
+               if (insertedCard != null)
                 {
                     using (var isoReader = new IsoReader(context, insertedCard.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
                     {
@@ -835,9 +844,11 @@ namespace BChipDesktop
                         }
 
                         UpdateTextLabel(CreatingKeyLabel, string.Empty);
+                        ClearTextBox(FriendlyNameTextBox);
 
                         // Done? clear loaded card, reload card
                         LoadedBChips = null;
+                        ChangePageUi(PageToShow.NoCard, null);
                         ScanAndLoadConnectedCards();
                     }
                     catch (Exception ex)
@@ -858,30 +869,38 @@ namespace BChipDesktop
         {
             label.Dispatcher.BeginInvoke(new Action(() =>
             {
-                label.Content = text;
+                if (label.Content is AccessText)
+                {
+                    AccessText accessText = label.Content as AccessText;
+                    accessText.Text = text;
+                }
+                else
+                {
+                    label.Content = text;
+                }
             }));
         }
 
         private void ClearTextBox(TextBox textBox)
         {
-            if (!String.IsNullOrEmpty(textBox.Text))
+            textBox.Dispatcher.BeginInvoke(new Action(() =>
             {
-                textBox.Dispatcher.BeginInvoke(new Action(() =>
+                if (!String.IsNullOrEmpty(textBox.Text))
                 {
                     textBox.Text = String.Empty;
-                }));
-            }
+                }
+            }));
         }
 
         private void ClearPasswordBox(PasswordBox passwordBox)
         {
-            if (!String.IsNullOrEmpty(passwordBox.Password))
+            passwordBox.Dispatcher.BeginInvoke(new Action(() =>
             {
-                passwordBox.Dispatcher.BeginInvoke(new Action(() =>
+                if (!String.IsNullOrEmpty(passwordBox.Password))
                 {
                     passwordBox.Password = String.Empty;
-                }));
-            }
+                }
+            }));
         }
 
         private void DispatcherUpdater(StackPanel uiControl, Visibility visibility)
@@ -953,8 +972,8 @@ namespace BChipDesktop
 
         private void CreateSeedPhrase_Click(object sender, RoutedEventArgs e)
         {
-            SetupProvisioningWindow(PKType.CUSTOM);
-            ChangePageUi(PageToShow.ProvisionCard, LoadedBChips);
+            CardPkType = PKType.Mnemonic;
+            ChangePageUi(PageToShow.ProvisionMnemonic, LoadedBChips);
         }
 
         private void PrivateKeyTextBox_TextInput(object sender, TextCompositionEventArgs e)
@@ -965,6 +984,119 @@ namespace BChipDesktop
         private void PrivateKeyTextBox_TextChanged(object sender)
         {
 
+        }
+
+        private void MnemonicProvisionCardButton_Click(object sender, RoutedEventArgs e)
+        {
+            MnemonicErrorLabel.Content = "";
+            MnemonicKeyLabel.Content = "";
+
+            if (Mnemonicpassphrase.Password.Length == 0 || MnemonicpassphraseConfirmation.Password.Length == 0)
+            {
+                MnemonicErrorLabel.Content = "A passphrase was not entered.";
+                return;
+            }
+
+            if (Mnemonicpassphrase.Password != MnemonicpassphraseConfirmation.Password)
+            {
+                MnemonicErrorLabel.Content = "Passphrases entered did not match.";
+                return;
+            }
+
+            if (MnemonicEntryTextBox.Text.Length == 0)
+            {
+                MnemonicErrorLabel.Content = "No private key data to store.";
+                return;
+            }
+
+            if (CardPkType != PKType.Mnemonic)
+            {
+                MnemonicErrorLabel.Content = "Invalid application state. Please restart app.";
+                return;
+            }
+
+            byte[] privateKeyToEncrypt = null;
+            byte[] publicKeyData = CryptographicBuffer.ConvertStringToBinary("Mnemonic seed backed up.", BinaryStringEncoding.Utf8).ToArray();
+
+            try
+            {
+                privateKeyToEncrypt = BIP39Helpers.GenerateEntropyFromWords(MnemonicEntryTextBox.Text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries), NBitcoin.Wordlist.English);
+            }
+            // TODO: Implement better exception types to ease debugging
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                MnemonicErrorLabel.Content = "Failed to automatically parse mnemonic phrase.";
+                return;
+            }
+            
+            if (privateKeyToEncrypt.Length > BChipMemoryLayout_BCHIP.PRIVATEKEY_MAX_DATA)
+            {
+                CreateKeyErrorLabel.Content =
+                    $"Private key was {PrivateKeyTextBox.Text.Length} bytes, {Math.Abs(PrivateKeyTextBox.Text.Length - BChipMemoryLayout_BCHIP.PRIVATEKEY_MAX_DATA)} bytes over the limit.";
+                return;
+            }
+            
+            string friendlyName = MnemonicFriendlyNameTextBox.Text;
+
+            ProvisionMnemonicPhraseViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ProvisionMnemonicPhraseViewGrid.IsEnabled = false;
+            }));
+
+            Task.Run(new Action(() =>
+            {
+                try
+                {
+                    UpdateTextLabel(MnemonicKeyLabel, "Setting up bChip! Do not remove card.");
+
+                    // Encrypt data
+                    BChipMemoryLayout_BCHIP bchip = LoadedBChips.SmartCardData as BChipMemoryLayout_BCHIP;
+                    bchip.EncryptPrivateKeyData(CardPkType, Mnemonicpassphrase.Password, privateKeyToEncrypt, publicKeyData);
+                    bchip.SetFriendlyName(friendlyName);
+
+                    using (var context = _contextFactory.Establish(SCardScope.System))
+                    {
+                        using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
+                        {
+                            var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
+                            Logger.Log($"ADPU response from pin request: {unlockResponse.StatusWord:X}");
+                            if (unlockResponse.StatusWord != 0x00009000)
+                            {
+                                UpdateTextLabel(MnemonicKeyLabel, "");
+                                UpdateTextLabel(MnemonicErrorLabel, "Could not be unlock bchip for writing.");
+                                return;
+                            }
+                            var writeResponse = isoReader.Transmit(AdpuHelper.WriteCardData(bchip));
+                            Logger.Log($"ADPU response from write card data: {unlockResponse.StatusWord:X}");
+                            if (unlockResponse.StatusWord != 0x00009000)
+                            {
+                                UpdateTextLabel(MnemonicKeyLabel, "");
+                                UpdateTextLabel(MnemonicErrorLabel, "Failure writing data to the bchip.");
+                                return;
+                            }
+                        }
+                    }
+
+                    UpdateTextLabel(MnemonicKeyLabel, string.Empty);
+                    ClearTextBox(MnemonicFriendlyNameTextBox);
+
+                    // Done? clear loaded card, reload card
+                    LoadedBChips = null;
+                    ScanAndLoadConnectedCards();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+                finally
+                {
+                    ProvisionMnemonicPhraseViewGrid.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ProvisionMnemonicPhraseViewGrid.IsEnabled = true;
+                    }));
+                }
+            }));
         }
     }
 }

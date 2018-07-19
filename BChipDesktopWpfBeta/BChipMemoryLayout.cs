@@ -269,44 +269,29 @@ namespace BChipDesktop
 
 
             this.IsConnected = false;
-
             this.PkStatus = PKStatus.NotAvailable;
-
         }
-
-
 
         public override bool IsConnected { get; set; }
 
         public PKStatus PkStatus { get; private set; }
 
-
-
         public bool IsFormatted
-
-        {
-
+          {
             get
-
             {
-
+                bool saltConfig = (Salt.Where(a => a == 0xFF).Count() == Salt.Length);
+                bool vidSet = (bchipVIDent.Where(a => a == 0xFF).Count() == bchipVIDent.Length);
+                bool pkeydataSet = (privateKeyData.Where(a => a == 0xFF).Count() == privateKeyData.Length);
                 return
-
                     // Spec for original Bchip has card new card data 
-
                     // set to 0xFF when unconfigured
-
-                    (Salt.Where(a => a == 0xFF).Count() == Salt.Length) &&
-
-                    (bchipVIDent.Where(a => a == 0xFF).Count() == bchipVIDent.Length) &&
-
-                    (privateKeyData.Where(a => a == 0xFF).Count() == privateKeyData.Length);
-
+                    saltConfig &&
+                    vidSet &&
+                    pkeydataSet
+                    ;
             }
-
         }
-
-
 
         // 8 bytes RNG - 
 
@@ -399,697 +384,363 @@ namespace BChipDesktop
         /// </summary>
 
         public async void EncryptPrivateKeyData(
-
             PKType keyType,
-
             string passPhrase,
-
             byte[] privateKey,
-
             byte[] publicKey)
-
         {
-
             if (privateKey.Length > 96)
-
             {
-
                 throw new Exception("Private Key length was larger than 96 bytes.");
-
             }
-
-
 
             byte[] dataToEncrypt = new byte[MAX_USER_PK];
-
             for (int i = 0; i < MAX_USER_PK; ++i)
-
             {
-
                 if (i < privateKey.Length)
-
                 {
-
                     dataToEncrypt[i] = privateKey[i];
-
                 }
-
                 else
-
                 {
-
                     dataToEncrypt[i] = 0xFF;
-
                 }
-
             }
-
-
 
             bchipVIDent[VID_PKLEN_ADDR] = (byte)privateKey.Length;
 
-
-
             // Quick and dirty
-
             int maxKeys = 256;
 
-
-
             // Generate keys:
-
             // This is the initial version and meant for speed. Eventually, we will force the
-
             // client to go through a large number of potential passfords as a form of POW
-
             string pass = passPhrase.ToString();
-
             var potPasswords = Encryptor.GeneratePassword(pass, maxKeys);
-
             byte[] initialPassword = Encryptor.CalculateSha512(CryptographicBuffer.ConvertStringToBinary(pass, BinaryStringEncoding.Utf8).ToArray()).ToArray();
-
             int generatedPin = Encryptor.GeneratePinCode(initialPassword, maxKeys);
 
-
-
             // Selected a key, Generate IV 
-
             byte[] chosenPassword = potPasswords[generatedPin % potPasswords.Count];
-
             // Nuke the salt *every* time
-
             byte[] rnd = new byte[SALT_MAX_DATA];
-
             RandomNumberGenerator.Create().GetBytes(rnd);
-
             this.Salt = rnd;
-
             byte[] chosenSalt = Encryptor.GenerateSalt(this.Salt);
-
             this.privateKeyData = Encryptor.Encrypt(dataToEncrypt.AsBuffer(), chosenPassword.AsBuffer(), chosenSalt.AsBuffer()).ToArray();
-
             this.PkType = keyType;
 
-
-
             byte[] publicKeyData = new byte[PUBKEY_MAX_DATA];
-
             int pubKeyLen = 0;
-
             if (publicKey != null)
-
             {
-
                 pubKeyLen = publicKey.Length;
-
                 bchipVIDent[VID_PUKLEN_ADDR] = (byte)pubKeyLen;
-
             }
-
             else
-
             {
-
                 bchipVIDent[VID_PUKLEN_ADDR] = 0;
-
             }
-
             for (int i = 0; i < publicKeyData.Length; ++i)
-
             {
-
                 if (i < pubKeyLen)
-
                 {
-
                     publicKeyData[i] = publicKey[i];
-
                 }
-
                 else
-
                 {
-
                     publicKeyData[i] = 0xFF;
-
                 }
-
             }
-
-
 
             this.publicKeyData = publicKeyData;
 
-
-
             this.crcData = GetCardCheckSum();
-
         }
-
-
 
         public void SetFriendlyName(string friendlyName)
-
         {
-
             if (friendlyName.Length > VID_MAX_DATA)
-
             {
-
                 throw new FormatException($"Friendly name was more than {VID_MAX_DATA} characters.");
-
             }
-
-
 
             if (String.IsNullOrWhiteSpace(friendlyName))
-
             {
-
                 friendlyName = String.Empty;
-
             }
-
-
 
             if (friendlyName.Length < VID_FRIENDLYNAME_MAX_DATA)
-
             {
-
                 for (int i = friendlyName.Length; i < VID_FRIENDLYNAME_MAX_DATA; ++i)
-
                 {
-
                     // Q&D
-
                     friendlyName += " ";
-
                 }
-
             }
-
-
 
             try
-
             {
-
                 byte[] friendlyNameBytes = UTF8Encoding.UTF8.GetBytes(friendlyName);
-
                 for (int i = 0; i < VID_FRIENDLYNAME_MAX_DATA; ++i)
-
                 {
-
                     this.bchipVIDent[VID_FRIENDLYNAME_ADDR + i] = friendlyNameBytes[i];
-
                 }
-
             }
-
             catch (Exception ex)
-
             {
-
                 Logger.Log(ex);
-
                 throw new FormatException("Failed to parse friendly name.");
-
             }
-
-
-
         }
 
-
-
         public byte[] DecryptPrivateKeyData(string passPhrase)
-
         {
-
             int expectedLength = bchipVIDent[VID_PKLEN_ADDR];
 
-
-
             if (expectedLength > 96)
-
             {
-
                 throw new Exception("Private Key length was larger than 96 bytes.");
-
             }
 
-
-
             // Quick and dirty
-
             int maxKeys = 256;
 
-
-
             // Generate keys
-
             var potPasswords = Encryptor.GeneratePassword(passPhrase, maxKeys);
 
             byte[] initialPassword = Encryptor.CalculateSha512(CryptographicBuffer.ConvertStringToBinary(passPhrase, BinaryStringEncoding.Utf8).ToArray());
 
             int generatedPin = Encryptor.GeneratePinCode(initialPassword, maxKeys);
 
-
-
             // Selected a key, Regenerate IV 
-
             IBuffer chosenPassword = potPasswords[generatedPin % potPasswords.Count].AsBuffer();
-
             IBuffer chosenSalt = Encryptor.GenerateSalt(this.Salt).AsBuffer();
-
-
-
             IBuffer decryptedData = Encryptor.Decrypt(this.privateKeyData.AsBuffer(), chosenPassword, chosenSalt);
 
-
-
             if (decryptedData == null || decryptedData.Length == 0)
-
             {
-
                 return null;
-
             }
-
-
 
             byte[] parsedKeyData = new byte[expectedLength];
-
             byte[] decryptedBytes = decryptedData.ToArray();
-
             for (int i = 0; i < parsedKeyData.Length; ++i)
-
             {
-
                 parsedKeyData[i] = decryptedBytes[i];
-
             }
-
-
 
             return parsedKeyData;
-
         }
-
-
 
         public byte[] GetCardCheckSum()
-
         {
-
             List<byte> cardBytes = new List<byte>();
-
             cardBytes.AddRange(this.Salt);
-
             cardBytes.AddRange(this.bchipVIDent);
-
             cardBytes.AddRange(this.publicKeyData);
-
             cardBytes.AddRange(this.privateKeyData);
 
-
-
             byte[] calc = SHA256.Create().ComputeHash(cardBytes.ToArray());
-
             calc = SHA256.Create().ComputeHash(calc);
 
-
-
             byte[] checksum = new byte[CRC_MAX_SIZE];
-
             for (int i = 0; i < checksum.Length; ++i)
-
             {
-
                 checksum[i] = calc[i];
-
             }
-
-
 
             return checksum;
-
         }
-
-
 
         public bool IsChecksumValid()
-
         {
-
             byte[] expectedCrc = this.crcData;
-
             byte[] crc = this.GetCardCheckSum();
-
             if (expectedCrc.Length != crc.Length)
-
             {
-
                 return false;
-
             }
-
-
 
             for (int i = 0; i < BChipMemoryLayout_BCHIP.CRC_MAX_SIZE; ++i)
-
             {
-
                 if (expectedCrc[i] != crc[i])
-
                 {
-
                     return false;
-
                 }
-
             }
-
-
 
             return true;
-
         }
-
-
 
         public override async Task<Response> WriteDataToCard(IContextFactory context, string cardReader)
-
         {
-
             using (var ctx = context.Establish(SCardScope.System))
-
             {
-
                 using (var isoReader = new IsoReader(ctx, cardReader, SCardShareMode.Shared, SCardProtocol.Any))
-
                 {
-
                     var response = isoReader.Transmit(AdpuHelper.SendPin());
-
                     response = isoReader.Transmit(AdpuHelper.WriteCardData(this));
-
                     return response;
-
                 }
-
             }
-
         }
-
-
 
         public override string IdLabel
-
         {
-
             get
-
             {
-
                 string friendlyName = string.Empty;
-
                 // If friendly name starts with 0xff, it is not set
-
                 if (this.bchipVIDent[VID_FRIENDLYNAME_ADDR] != 0xFF)
-
                 {
-
                     byte[] fname = this.bchipVIDent.Skip(VID_FRIENDLYNAME_ADDR).Take(VID_FRIENDLYNAME_MAX_DATA).ToArray();
 
-
-
                     try
-
                     {
-
                         friendlyName = UTF8Encoding.UTF8.GetString(this.bchipVIDent, VID_FRIENDLYNAME_ADDR, VID_FRIENDLYNAME_MAX_DATA);
-
                     }
-
                     catch (Exception ex)
-
                     {
-
                         Logger.Log(ex);
-
                     }
-
                 }
-
-
 
                 StringBuilder cardId = new StringBuilder();
-
                 for (int i = 0; i < mlvi.Length; i += 2)
-
                 {
-
                     cardId.Append($"{mlvi[i]:X}{mlvi[i + 1]:X} ");
-
                 }
-
-
 
                 return $"{friendlyName} (ID: {cardId.ToString().Trim()})";
-
             }
-
         }
-
-
 
         public PKType PkType
-
         {
-
             get
-
             {
-
                 return (PKType)bchipVIDent[BChipMemoryLayout_BCHIP.VID_PKTYPE_ADDR];
-
             }
-
             set
-
             {
-
                 bchipVIDent[BChipMemoryLayout_BCHIP.VID_PKTYPE_ADDR] = (byte)value;
-
             }
-
         }
-
-
 
         public override string CardTypeLabel
-
         {
-
             get
-
             {
-
                 try
-
                 {
-
                     PKType detectedPkType = (PKType)bchipVIDent[BChipMemoryLayout_BCHIP.VID_PKTYPE_ADDR];
-
                     return detectedPkType.ToString();
-
                 }
-
                 catch
-
                 {
-
                     return "UNSUPPORTED";
-
                 }
-
             }
-
         }
 
-
-
         public string DecryptedPrivateKeyString(string passphrase)
-
         {
-
             byte[] decryptedKey = this.DecryptPrivateKeyData(passphrase);
 
-
-
             if (decryptedKey == null)
-
             {
-
                 //Nothing to decrypt?
-
                 return "";
-
             }
-
-
 
             string privateKey;
 
             Key key = null;
-
             switch (this.PkType)
-
             {
-
                 case PKType.BTC:
-
                     key = new Key(decryptedKey);
-
                     privateKey = key.GetWif(Network.Main).ToWif();
-
                     break;
-
                 case PKType.BTC_TestNet:
-
                     key = new Key(decryptedKey);
-
                     privateKey = key.GetWif(Network.TestNet).ToWif();
-
                     break;
-
                 // Generic failsafe, no parsing/validation
-
                 case PKType.UNSET:
-
                 case PKType.ETH:
-
                 case PKType.CUSTOM:
-
                 default:
-
                     privateKey = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, decryptedKey.AsBuffer());
-
                     break;
-
+                case PKType.Mnemonic:
+                    // TODO: Hardcoded to english, can add integrated OS detection or drop down for multilang
+                    string[] words = BIP39Helpers.DecodeMnemonicFromEntropy(decryptedKey, Wordlist.English);
+                    StringBuilder wordList = new StringBuilder();
+                    foreach(string word in words)
+                    {
+                         wordList.Append($" {word}");
+                    }
+                    privateKey = wordList.ToString();
+                    break;
             }
-
-
 
             return privateKey;
-
         }
-
-
 
         public override string PublicAddress
-
         {
-
             get
-
             {
-
                 try
-
                 {
-
                     // older card work around
-
                     if (bchipVIDent[VID_PUKLEN_ADDR] == 0xFF &&
-
                         (this.PkType == PKType.BTC || this.PkType == PKType.BTC_TestNet))
-
                     {
-
                         bchipVIDent[VID_PUKLEN_ADDR] = 0x21;
-
                     }
-
-
 
                     if (bchipVIDent[VID_PUKLEN_ADDR] != 0 && bchipVIDent[VID_PUKLEN_ADDR] != 0xFF)
-
                     {
-
                         byte[] pubKeyData = this.publicKeyData.Take(bchipVIDent[VID_PUKLEN_ADDR]).ToArray();
-
                         switch (this.PkType)
-
                         {
-
                             case PKType.BTC:
-
                                 return new PubKey(pubKeyData).GetAddress(Network.Main).ToString();
-
                             case PKType.BTC_TestNet:
-
                                 return new PubKey(pubKeyData).GetAddress(Network.TestNet).ToString();
-
+                            case PKType.Mnemonic:
                             case PKType.UNSET:
-
                             case PKType.ETH:
-
                             case PKType.CUSTOM:
-
                             default:
-
                                 return CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, pubKeyData.AsBuffer());
-
                         }
-
                     }
-
                     return "";
-
                 }
-
                 catch
-
                 {
-
                     return null;
-
                 }
-
             }
-
         }
-
-
 
         public override string ConnectionString
-
         {
             get
-
             {
-
                 return IsConnected ? "Connected" : "Not Connected";
-
             }
-
         }
-
         public override string PkSource
-
         {
             get
-
             {
-
                 return PkStatus.ToString();
-
             }
-
         }
-
     }
-
 }
