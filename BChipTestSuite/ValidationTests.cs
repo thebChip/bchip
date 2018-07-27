@@ -105,7 +105,6 @@ namespace BChipTestSuite
                 new BChipMemoryLayout_BCHIP(
                     mlvi,
                     simulatedCard.ToArray(),
-                    false,
                     PKStatus.NotAvailable);
 
             Assert.IsTrue(bChipCardData.crcData.Length == BChipMemoryLayout_BCHIP.CRC_MAX_SIZE);

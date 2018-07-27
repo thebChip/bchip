@@ -1,283 +1,140 @@
 ﻿using bChipDesktop;
-
 using NBitcoin;
-
 using PCSC;
-
 using PCSC.Iso7816;
-
 using SimpleLogger;
-
 using System;
-
 using System.Collections.Generic;
-
 using System.IO;
-
 using System.Linq;
-
 using System.Reflection;
-
 using System.Runtime.InteropServices.WindowsRuntime;
-
 using System.Security.Cryptography;
-
 using System.Text;
-
 using System.Threading.Tasks;
-
 using Windows.Security.Cryptography;
-
 using Windows.Storage.Streams;
 
-
-
 namespace BChipDesktop
-
 {
-
     /// 224 bytes free to write outside of the protected region
-
     /// Regions for v0a: 
-
     ///         Write Once Protected Area (unused): 0x00-0x20      (32 bytes)
-
     ///         ID Memory:        (0x20)+0x00-0x07                 (8 bytes)
-
     ///         Unused Memory:    (0x20)+0x08-0xFF                 (214 bytes)
-
-    public abstract class BChipMemoryLayout
-
+    public abstract class BChipMemoryLayout 
     {
-
         // 8 bytes - Memory Layout Version Identifier
-
         // NB: Initial release is v0a-XXYYYYYYYYYYYYYY
-
         //  The "XX" in an mlvi identifier is the bchip card type identifier
-
         //  The "YY" is the cards unique identifier
-
         // TODO: This will eventually be part of the ROM of the card and generated when shipped
-
         public const int MLVI_ADDR = 0;
-
         public const int MLVI_MAX_DATA = 8;
-
         public byte[] mlvi { get; }
 
-
-
         public BChipMemoryLayout(CardType cardType, byte[] cardId)
-
         {
-
             if (cardId == null || cardId.Length != 7)
-
             {
-
                 throw new Exception("Card ID should be 7 bytes.");
-
             }
-
-
 
             // Incase the mlvi was not pre-initialized, let's create one
-
             if (cardId.Count(a => a == 0xFF) >= 6)
-
             {
-
                 cardId = new byte[7];
-
                 RandomNumberGenerator.Create().GetBytes(cardId);
-
             }
-
-
 
             this.cardType = cardType;
-
             this.mlvi = new byte[8];
-
             this.mlvi[0] = (byte)cardType;
-
             for (int i = 1; i < mlvi.Length; ++i)
-
             {
-
                 this.mlvi[i] = cardId[i - 1];
-
             }
-
         }
-
-
 
         public BChipMemoryLayout(byte[] mlvi)
-
         {
-
             if (mlvi == null || mlvi.Length != 8)
-
             {
-
                 throw new Exception("MLVI should be 8 bytes.");
-
             }
-
-
 
             // Incase the mlvi was not pre-initialized, let's create one
-
             if (mlvi.Count(a => a == 0xFF) >= 7)
-
             {
-
                 mlvi = new byte[8];
-
                 RandomNumberGenerator.Create().GetBytes(mlvi);
-
             }
 
-
-
             this.cardType = (CardType)mlvi[0];
-
             this.mlvi = mlvi;
-
         }
 
-
-
         public abstract string IdLabel { get; }
-
         public abstract string CardTypeLabel { get; }
-
         public abstract string PublicAddress { get; }
-
-        public abstract bool IsConnected { get; set; }
-
-        public abstract string ConnectionString { get; }
-
         public abstract string PkSource { get; }
 
-
-
         //public abstract PKType PkType { get; }
-
         public CardType cardType { get; private set; }
-
-
-
-        public abstract Task<Response> WriteDataToCard(IContextFactory context, string cardReader);
-
     }
 
 
-
     /// Regions for initial bChip release (v0a): 
-
     public class BChipMemoryLayout_BCHIP : BChipMemoryLayout
-
     {
-
         public BChipMemoryLayout_BCHIP(
-
             byte[] mlvi,
-
             byte[] cardData,
-
-            bool isConnected,
-
             PKStatus pkStatus)
-
             : base(mlvi)
-
         {
-
             int len = cardData.Length;
-
             // Validate len
 
-
-
             this.Salt = cardData.Skip(SALT_ADDR).Take(SALT_MAX_DATA).ToArray();
-
             this.bchipVIDent = cardData.Skip(VID_DATA_ADDR).Take(VID_MAX_DATA).ToArray();
-
             this.privateKeyData = cardData.Skip(PK_DATA_ADDR).Take(PRIVATEKEY_MAX_DATA).ToArray();
-
             this.publicKeyData = cardData.Skip(PUBKEY_DATA_ADDR).Take(PUBKEY_MAX_DATA).ToArray();
-
             this.crcData = cardData.Skip(CRC_DATA_ADDR).Take(CRC_MAX_SIZE).ToArray();
-
-            this.IsConnected = isConnected;
-
             this.PkStatus = pkStatus;
-
         }
-
-
 
         public BChipMemoryLayout_BCHIP(byte[] mlvi) : base(mlvi.ToArray())
-
         {
-
             this.Salt = new byte[SALT_MAX_DATA];
-
             for (int i = 0; i < SALT_MAX_DATA; i++)
-
             {
-
                 this.Salt[i] = 0x55;
-
             }
-
             this.bchipVIDent = new byte[VID_MAX_DATA];
-
             this.bchipVIDent[0] = (int)PKType.CUSTOM;
-
             for (int i = 1; i < VID_MAX_DATA; i++)
-
             {
-
                 this.bchipVIDent[i] = 0xBB;
-
             }
-
             this.privateKeyData = new byte[PRIVATEKEY_MAX_DATA];
-
             for (int i = 0; i < PRIVATEKEY_MAX_DATA; i++)
-
             {
-
                 this.privateKeyData[i] = 0x00;
-
             }
-
             this.publicKeyData = new byte[PUBKEY_MAX_DATA];
-
             for (int i = 0; i < PUBKEY_MAX_DATA; i++)
-
             {
-
                 this.publicKeyData[i] = 0xAA;
-
             }
 
-
-
-            this.IsConnected = false;
-            this.PkStatus = PKStatus.NotAvailable;
-        }
-
-        public override bool IsConnected { get; set; }
+           this.PkStatus = PKStatus.NotAvailable;
+       }
 
         public PKStatus PkStatus { get; private set; }
 
         public bool IsFormatted
-          {
+         {
             get
             {
                 bool saltConfig = (Salt.Where(a => a == 0xFF).Count() == Salt.Length);
@@ -294,95 +151,50 @@ namespace BChipDesktop
         }
 
         // 8 bytes RNG - 
-
         public const int SALT_ADDR = 0;
-
         public const int SALT_MAX_DATA = 8;
 
-
-
         public byte[] Salt { get; private set; }
-
         // 32 bytes
-
         // 00-07: Private Key Type Identifier (Private key source)
-
         // 01   : PK length (32, 64 or 96)
-
         // 02   : PubKey length (0-64 bytes)
-
         //        See PKType enum. Bytes 1-7 unused.
-
         public const int VID_PKTYPE_ADDR = 0;
-
         public const int VID_PKLEN_ADDR = 1;
-
         public const int VID_PUKLEN_ADDR = 2;
-
         // 08-15: Build version identifier
-
         public const int VID_BUILD_VERSION = 8;
-
         // 16-23: Friendly name
-
         public const int VID_FRIENDLYNAME_ADDR = 16;
-
         public const int VID_FRIENDLYNAME_MAX_DATA = 8;
-
         public const int VID_DATA_ADDR = SALT_ADDR + SALT_MAX_DATA; // 8+0==8
-
         public const int VID_MAX_DATA = 24;
-
         public byte[] bchipVIDent { get; }
 
-
-
         // Can hold a maximum of 64 bytes of public key data
-
         public const int PUBKEY_DATA_ADDR = VID_DATA_ADDR + VID_MAX_DATA; // 8+32==40
-
         public const int PUBKEY_MAX_DATA = 64;
-
         public byte[] publicKeyData { get; private set; }
 
-
-
         public const int PK_DATA_ADDR = PUBKEY_DATA_ADDR + PUBKEY_MAX_DATA; // 40+64==104
-
         // maximum bytes that can be encrypted on a BChip card
-
         // Most private keys are either 32 or 64 bytes, such as deterministic wallets,
-
         // and some keys supporting up to 512bits, for a total of 96 bytes. 
-
         public const int MAX_USER_PK = 96;
-
         // The total size of the encrypted key. The key size is "always" 96 bytes, + padding, is 112.
-
         public const int PRIVATEKEY_MAX_DATA = 112;
-
         public byte[] privateKeyData { get; private set; }
 
-
-
         // 104+112==216 -> 7 bytes remaining
-
         public const int CRC_DATA_ADDR = PK_DATA_ADDR + PRIVATEKEY_MAX_DATA;
-
         public const int CRC_MAX_SIZE = 7;
-
         public byte[] crcData { get; private set; }
 
-
-
         /// <summary>
-
         /// Takes in a passphrase, a salt and private key - stores the encrypted bits locally, publicKey is optional.
-
         /// TODO: This method will be deprecated sooner than later for a more secure alternative.
-
         /// </summary>
-
         public async void EncryptPrivateKeyData(
             PKType keyType,
             string passPhrase,
@@ -572,20 +384,7 @@ namespace BChipDesktop
 
             return true;
         }
-
-        public override async Task<Response> WriteDataToCard(IContextFactory context, string cardReader)
-        {
-            using (var ctx = context.Establish(SCardScope.System))
-            {
-                using (var isoReader = new IsoReader(ctx, cardReader, SCardShareMode.Shared, SCardProtocol.Any))
-                {
-                    var response = isoReader.Transmit(AdpuHelper.SendPin());
-                    response = isoReader.Transmit(AdpuHelper.WriteCardData(this));
-                    return response;
-                }
-            }
-        }
-
+        
         public override string IdLabel
         {
             get
@@ -728,13 +527,6 @@ namespace BChipDesktop
             }
         }
 
-        public override string ConnectionString
-        {
-            get
-            {
-                return IsConnected ? "Connected" : "Not Connected";
-            }
-        }
         public override string PkSource
         {
             get

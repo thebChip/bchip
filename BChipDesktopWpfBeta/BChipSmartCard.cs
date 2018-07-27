@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PCSC.Iso7816;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -66,12 +67,29 @@ namespace BChipDesktop
     public class BChipSmartCard
     {
         public string ReaderDeviceId { get; set; }
-        public string ReaderName { get; set; }
+        public string ReaderName { get; private set; }
         public string CardName { get; set; }
         public byte[] ATR { get; set; }
         public DateTime LastConnected { get; set; }
         public bool IsConnected { get; set; }
         public BChipMemoryLayout SmartCardData { get; set; }
+        public AdpuInterface AdpuInterface { get; private set; }
+
+        public BChipSmartCard(string readerName)
+        {
+            this.ReaderName = readerName;
+            
+            switch (SmartCardInterface.AutoDetectReader(readerName))
+            {
+                case SmartCardInterface.ReaderType.Acr39:
+                    this.AdpuInterface = new AcrAdpuInterface();
+                    break;
+                case SmartCardInterface.ReaderType.HidOmninkey:
+                    this.AdpuInterface = new OmnikeyAdpuInterface();
+                    break;
+            }
+        }
+
 
         public CardType Type()
         {
