@@ -17,7 +17,7 @@ namespace BChipDesktop
         public static ReaderType AutoDetectReader(string readerName)
         {
             ReaderType parsedReader;
-            if (readerName.Contains("ACR39U"))
+            if (readerName.Contains("ACR39U") || readerName.Contains("ACS")) // Generic ACS override
             {
                 return ReaderType.Acr39;
             }
