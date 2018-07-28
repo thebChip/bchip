@@ -132,7 +132,6 @@
     <Compile Include="BIP39Helpers.cs" />
     <Compile Include="QrHandler.cs" />
     <Compile Include="DeviceEventMonitor.cs" />
-    <Compile Include="SmartCardReader.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

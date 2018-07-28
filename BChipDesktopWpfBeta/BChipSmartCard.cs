@@ -64,6 +64,12 @@ namespace BChipDesktop
         WriteDataToFullCard
     }
 
+    public enum ReaderType
+    {
+        HidOmninkey, // Default assumed reader
+        Acr39
+    }
+
     public class BChipSmartCard
     {
         public string ReaderDeviceId { get; set; }
@@ -79,17 +85,26 @@ namespace BChipDesktop
         {
             this.ReaderName = readerName;
             
-            switch (SmartCardInterface.AutoDetectReader(readerName))
+            switch (AutoDetectReader(readerName))
             {
-                case SmartCardInterface.ReaderType.Acr39:
+                case ReaderType.Acr39:
                     this.AdpuInterface = new AcrAdpuInterface();
                     break;
-                case SmartCardInterface.ReaderType.HidOmninkey:
+                case ReaderType.HidOmninkey:
                     this.AdpuInterface = new OmnikeyAdpuInterface();
                     break;
             }
         }
 
+        public ReaderType AutoDetectReader(string readerName)
+        {
+            if (readerName.Contains("ACR39U") || readerName.Contains("ACS")) // Generic ACS override
+            {
+                return ReaderType.Acr39;
+            }
+
+            return ReaderType.HidOmninkey;
+        }
 
         public CardType Type()
         {
