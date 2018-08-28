@@ -633,8 +633,19 @@ namespace BChipDesktop
 
         private void CopyPrivateAddressToClipBoard()
         {
-            Clipboard.SetText(PrivateKeyAddressLabel.Content.ToString());
-            MessageBox.Show($"Your private key has been copied to your clipboard - make sure you clear it as soon as possible.");
+            PrivateKeyAddressLabel.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                string pk = string.Empty;
+
+                if (PrivateKeyAddressLabel.Content is AccessText)
+                {
+                    AccessText accessText = PrivateKeyAddressLabel.Content as AccessText;
+                    pk = accessText.Text;
+
+                    Clipboard.SetText(pk);
+                    MessageBox.Show($"Your private key has been copied to your clipboard - make sure you clear it as soon as possible.");
+                }
+            }));
         }
 
         private void PrivateKeyAddressLabel_TouchDown(object sender, MouseButtonEventArgs e)
