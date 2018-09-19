@@ -80,10 +80,9 @@ namespace BChipDesktop
                 try
                 {
                     BChipSmartCard insertedCard =
-                        new BChipSmartCard
+                        new BChipSmartCard(e.ReaderName)
                         {
                             ATR = e.Atr,
-                            ReaderName = e.ReaderName,
                             LastConnected = DateTime.Now,
                             IsConnected = true
                         };
@@ -360,10 +359,9 @@ namespace BChipDesktop
                             using (var reader =
                             context.ConnectReader(curReader, SCardShareMode.Shared, SCardProtocol.Any))
                             {
-                                insertedCard = new BChipSmartCard
+                                insertedCard = new BChipSmartCard(curReader)
                                 {
                                     ATR = reader.GetAttrib(SCardAttribute.AtrString),
-                                    ReaderName = curReader,
                                     LastConnected = DateTime.Now,
                                     IsConnected = true
                                 };
@@ -397,7 +395,16 @@ namespace BChipDesktop
                     {
                         try
                         {
-                            Response response = isoReader.Transmit(AdpuHelper.RetrieveFullCardData());
+                            if (insertedCard.AdpuInterface.RequiresInit)
+                            {
+                                Response initResponse = isoReader.Transmit(insertedCard.AdpuInterface.InitCard());
+                                if (initResponse.SW1 != 0x90)
+                                {
+                                    Logger.Log("Error initializing smart card reader");
+                                }
+                            }
+ 
+                            Response response = isoReader.Transmit(insertedCard.AdpuInterface.ReadCard());
                             if (response.HasData)
                             {
                                 byte[] data = response.GetData();
@@ -405,7 +412,7 @@ namespace BChipDesktop
                                 byte[] carddata = data.Skip(0x28).ToArray();
 
                                 // At this stage, the card has not yet been validated/parsed. Another thread should handle cleanup/de-dupes
-                                insertedCard.SmartCardData = new BChipMemoryLayout_BCHIP(mlvi, carddata, true, PKStatus.NotValidated);
+                                insertedCard.SmartCardData = new BChipMemoryLayout_BCHIP(mlvi, carddata, PKStatus.NotValidated);
                                 LoadedBChips = insertedCard;
 
                                 ChangePageUi(AnalyzeCardData(insertedCard), insertedCard);
@@ -413,6 +420,7 @@ namespace BChipDesktop
                             else
                             {
                                 Logger.Log("Card added had no data to download");
+                                // TODO: Add card data could not be loaded (not CRC error)
                             }
                         }
                         catch (Exception ex)
@@ -678,9 +686,17 @@ namespace BChipDesktop
                 {
                     using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
                     {
-                        var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
+                        if (LoadedBChips.AdpuInterface.RequiresInit)
+                        {
+                            Response initResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.InitCard());
+                            if (initResponse.SW1 != 0x90)
+                            {
+                                Logger.Log("Error initializing smart card reader");
+                            }
+                        }
+                        var unlockResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.UnblockCard());
                         Logger.Log($"ADPU response from pin request: {unlockResponse.StatusWord:X}");
-                        var writeResponse = isoReader.Transmit(AdpuHelper.FormatCard(CardType.BChip));
+                        var writeResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.FormatCard(CardType.BChip));
                         Logger.Log($"ADPU response from format request: {unlockResponse.StatusWord:X}");
                     }
                 }
@@ -835,17 +851,26 @@ namespace BChipDesktop
                         {
                             using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
                             {
-                                var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
+                                if (LoadedBChips.AdpuInterface.RequiresInit)
+                                {
+                                    Response initResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.InitCard());
+                                    if (initResponse.SW1 != 0x90)
+                                    {
+                                        Logger.Log("Error initializing smart card reader");
+                                    }
+                                }
+
+                                var unlockResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.UnblockCard());
                                 Logger.Log($"ADPU response from pin request: {unlockResponse.StatusWord:X}");
-                                if (unlockResponse.StatusWord != 0x00009000)
+                                if (unlockResponse.SW1 != 0x90)
                                 {
                                     UpdateTextLabel(CreatingKeyLabel, "");
                                     UpdateTextLabel(CreateKeyErrorLabel, "Could not be unlock bchip for writing.");
                                     return;
                                 }
-                                var writeResponse = isoReader.Transmit(AdpuHelper.WriteCardData(bchip));
+                                var writeResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.WriteCard(bchip));
                                 Logger.Log($"ADPU response from write card data: {unlockResponse.StatusWord:X}");
-                                if (unlockResponse.StatusWord != 0x00009000)
+                                if (writeResponse.StatusWord != 0x00009000)
                                 {
                                     UpdateTextLabel(CreatingKeyLabel, "");
                                     UpdateTextLabel(CreateKeyErrorLabel, "Failure writing data to the bchip.");
@@ -1070,17 +1095,26 @@ namespace BChipDesktop
                     {
                         using (var isoReader = new IsoReader(context, LoadedBChips.ReaderName, SCardShareMode.Shared, SCardProtocol.Any))
                         {
-                            var unlockResponse = isoReader.Transmit(AdpuHelper.SendPin());
+                            if (LoadedBChips.AdpuInterface.RequiresInit)
+                            {
+                                Response initResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.InitCard());
+                                if (initResponse.SW1 != 0x90)
+                                {
+                                    Logger.Log("Error initializing smart card reader");
+                                }
+                            }
+
+                            var unlockResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.UnblockCard());
                             Logger.Log($"ADPU response from pin request: {unlockResponse.StatusWord:X}");
-                            if (unlockResponse.StatusWord != 0x00009000)
+                            if (unlockResponse.SW1 != 0x90)
                             {
                                 UpdateTextLabel(MnemonicKeyLabel, "");
                                 UpdateTextLabel(MnemonicErrorLabel, "Could not be unlock bchip for writing.");
                                 return;
                             }
-                            var writeResponse = isoReader.Transmit(AdpuHelper.WriteCardData(bchip));
+                            var writeResponse = isoReader.Transmit(LoadedBChips.AdpuInterface.WriteCard(bchip));
                             Logger.Log($"ADPU response from write card data: {unlockResponse.StatusWord:X}");
-                            if (unlockResponse.StatusWord != 0x00009000)
+                            if (writeResponse.SW1 != 0x90)
                             {
                                 UpdateTextLabel(MnemonicKeyLabel, "");
                                 UpdateTextLabel(MnemonicErrorLabel, "Failure writing data to the bchip.");

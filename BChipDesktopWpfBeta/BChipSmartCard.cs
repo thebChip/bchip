@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PCSC.Iso7816;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,15 +64,47 @@ namespace BChipDesktop
         WriteDataToFullCard
     }
 
+    public enum ReaderType
+    {
+        HidOmninkey, // Default assumed reader
+        Acr39
+    }
+
     public class BChipSmartCard
     {
         public string ReaderDeviceId { get; set; }
-        public string ReaderName { get; set; }
+        public string ReaderName { get; private set; }
         public string CardName { get; set; }
         public byte[] ATR { get; set; }
         public DateTime LastConnected { get; set; }
         public bool IsConnected { get; set; }
         public BChipMemoryLayout SmartCardData { get; set; }
+        public AdpuInterface AdpuInterface { get; private set; }
+
+        public BChipSmartCard(string readerName)
+        {
+            this.ReaderName = readerName;
+            
+            switch (AutoDetectReader(readerName))
+            {
+                case ReaderType.Acr39:
+                    this.AdpuInterface = new AcrAdpuInterface();
+                    break;
+                case ReaderType.HidOmninkey:
+                    this.AdpuInterface = new OmnikeyAdpuInterface();
+                    break;
+            }
+        }
+
+        public ReaderType AutoDetectReader(string readerName)
+        {
+            if (readerName.Contains("ACR39U") || readerName.Contains("ACS")) // Generic ACS override
+            {
+                return ReaderType.Acr39;
+            }
+
+            return ReaderType.HidOmninkey;
+        }
 
         public CardType Type()
         {
